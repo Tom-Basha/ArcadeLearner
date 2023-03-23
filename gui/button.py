@@ -1,5 +1,5 @@
 import pygame as pg
-from assets import paths
+from assets import paths, utils
 
 
 
@@ -43,4 +43,4 @@ class Button():
 
 
 # presets
-QUIT_BTN = Button((640, 640), "QUIT", get_font(55), "#b68f40", "#f6fcd4", None)
+QUIT_BTN = Button((640, 640), "QUIT", utils.get_font(55), "#b68f40", "#f6fcd4")
