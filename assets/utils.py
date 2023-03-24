@@ -15,7 +15,7 @@ def get_font(size):
     return pg.font.Font(paths.MAIN_FONT, size)
 
 
-# presets
+# Labels presets
 def header(text, pos=(640, 85)):
     label = get_font(70).render(text, True, MAIN_CLR)
     rect = label.get_rect(center=pos)
