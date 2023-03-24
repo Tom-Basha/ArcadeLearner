@@ -12,34 +12,33 @@ selected_keys = {}
 
 
 def play():
-    while True:
-        PLAY_MOUSE_POS = pg.mouse.get_pos()
+    # Irrelevant at the moment
+    return
 
-        SCREEN.fill("black")
-
-        PLAY_TEXT = get_font(45).render("This is the PLAY screen.", True, "White")
-        PLAY_RECT = PLAY_TEXT.get_rect(center=(640, 260))
-        SCREEN.blit(PLAY_TEXT, PLAY_RECT)
-
-        PLAY_BACK = Button(bg=None, pos=(640, 460),
-                           text="BACK", font=get_font(75), color="White", hover_color="Green")
-
-        PLAY_BACK.change_color(PLAY_MOUSE_POS)
-        PLAY_BACK.update(SCREEN)
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                if PLAY_BACK.check_input(PLAY_MOUSE_POS):
-                    main_menu()
-
-        pg.display.update()
-
-
-# def get_font(size):  # Returns Press-Start-2P in the desired size
-#     return pg.font.Font(paths.MAIN_FONT, size)
+    #while True:
+    #    PLAY_MOUSE_POS = pg.mouse.get_pos()
+#
+    #    SCREEN.fill("black")
+#
+    #    PLAY_TEXT = get_font(45).render("This is the PLAY screen.", True, "White")
+    #    PLAY_RECT = PLAY_TEXT.get_rect(center=(640, 260))
+    #    SCREEN.blit(PLAY_TEXT, PLAY_RECT)
+#
+    #    PLAY_BACK = Button(bg=None, pos=(640, 460),
+    #                       text="BACK", font=get_font(75), color="White", hover_color="Green")
+#
+    #    PLAY_BACK.change_color(PLAY_MOUSE_POS)
+    #    PLAY_BACK.update(SCREEN)
+#
+    #    for event in pg.event.get():
+    #        if event.type == pg.QUIT:
+    #            pg.quit()
+    #            sys.exit()
+    #        if event.type == pg.MOUSEBUTTONDOWN:
+    #            if PLAY_BACK.check_input(PLAY_MOUSE_POS):
+    #                main_menu()
+#
+    #    pg.display.update()
 
 
 def selected_game(game):
@@ -51,7 +50,7 @@ def selected_game(game):
 
         MENU_MOUSE_POS = pg.mouse.get_pos()
 
-        HEADER, HEADER_RECT= header(game)
+        HEADER, HEADER_RECT = header(game)
         SCREEN.blit(HEADER, HEADER_RECT)
 
         PLAY_BUTTON = manu_btn("Play", (230, 250))
@@ -80,7 +79,7 @@ def selected_game(game):
                     selected_keys = ks.key_selection(selected_keys)
                 if FEATURES_BUTTON.check_input(MENU_MOUSE_POS):
                     # attributs = extract_features('game.py')
-                    print("ATT")
+                    WIP()
                 if PLAY_BACK.check_input(MENU_MOUSE_POS):
                     main_menu()
 
@@ -89,16 +88,17 @@ def selected_game(game):
 
 # Delete WIP after initiating **ALL** buttons functions
 def WIP():
+    BG = pg.image.load(BACKGROUND_IMAGE)
+
     while True:
         OPTIONS_MOUSE_POS = pg.mouse.get_pos()
 
-        SCREEN.fill("white")
+        SCREEN.blit(BG, (0, 0))
 
-        OPTIONS_TEXT = get_font(45).render("WORK IN PROGRESS", True, "Black")
-        OPTIONS_RECT = OPTIONS_TEXT.get_rect(center=(640, 260))
+        OPTIONS_TEXT, OPTIONS_RECT = subhead("WORK IN PROGRESS", pos=(640, 260))
         SCREEN.blit(OPTIONS_TEXT, OPTIONS_RECT)
 
-        OPTIONS_BACK = Button((640, 460), "BACK")
+        OPTIONS_BACK = back_btn()
         OPTIONS_BACK.change_color(OPTIONS_MOUSE_POS)
         OPTIONS_BACK.update(SCREEN)
 
