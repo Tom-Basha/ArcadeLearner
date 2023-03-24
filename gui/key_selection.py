@@ -1,36 +1,21 @@
 import pygame
 import pygame.gfxdraw
-from assets import paths
+from assets.button import *
 
-class KeySelection():
+
+class KeySelection:
     def __init__(self, keys):
         # Define some constants for the colors and sizes of the keys
-        self.button_rect = None
-        self.button_text = None
-        self.WHITE = (255, 255, 255)
-        self.BLACK = (0, 0, 0)
-        self.GREEN = (0, 255, 0, 128)
         self.KEY_WIDTH = 50
         self.KEY_HEIGHT = 50
         self.KEY_MARGIN = 1
-        self.KEY_FONT_SIZE = 12
-        self.KEY_DEPTH = 10
 
         self.curr_x = 183
         self.curr_y = 200
 
-        # Initialize Pygame
-        # pygame.init()
-
         # Create a Pygame window
         self.screen = pygame.display.set_mode((1280, 720))
-        self.font = pygame.font.Font(paths.MAIN_FONT, self.KEY_FONT_SIZE)
-
         pygame.display.set_caption("Controls")
-        # BG = pygame.image.load("assets/Background.png")
-        #
-        # # Create a font for the key labels
-        # self.font = pygame.font.Font("assets/font.ttf", self.KEY_FONT_SIZE)
 
         # Create a dictionary of key labels and their rectangles
         self.key_rects = {}
@@ -134,39 +119,21 @@ class KeySelection():
 
     def draw_keyboard(self):
         keyboard_boarder = pygame.Rect(165, 180, 950, 370)
-        pygame.draw.rect(screen, self.WHITE, keyboard_boarder, 2, border_radius=15)
+        pygame.draw.rect(SCREEN, WHITE, keyboard_boarder, 2, border_radius=15)
 
         # Draw the keys
         for key, (rect, disp_name) in self.key_rects.items():
             # Draw the key's top surface
-            key_color = (0, 255, 0, 0) if key in clicked_keys else (255, 255, 255, 0)
-            pygame.gfxdraw.box(screen, rect, key_color)
+            key_color = GREEN if key in clicked_keys else WHITE
+            pygame.gfxdraw.box(SCREEN, rect, key_color)
 
-            # Draw the key's black border
+            # Draw the key's border
             border_rect = rect.inflate(-1, -1)
-            pygame.draw.rect(screen, key_color, border_rect, 3, border_radius=10)
+            pygame.draw.rect(SCREEN, key_color, border_rect, 3, border_radius=10)
 
             # Draw the key label
-            label = self.font.render(disp_name, True, key_color)
-            label_rect = label.get_rect(center=rect.center)
-            screen.blit(label, label_rect)
-
-        font = pygame.font.Font(paths.MAIN_FONT, 60)
-        label = font.render("CONTROLS", True, "#b68f40")
-        label_rect = label.get_rect(center=(640, 85))
-        screen.blit(label, label_rect)
-
-        font = pygame.font.Font(paths.MAIN_FONT, 12)
-        label = font.render("SELECT THE RELEVANT KEYS FOR THE GAME YOU HAVE CHOSEN", True, "#f6fcd4")
-        label_rect = label.get_rect(center=(640, 125))
-        screen.blit(label, label_rect)
-
-        font = pygame.font.Font(paths.MAIN_FONT, 45)
-        self.button_text = font.render("BACK", True, "#b68f40")
-        self.button_text_hover = font.render("BACK", True, "#f6fcd4")
-        self.button_rect = self.button_text.get_rect(center=(640, 640))
-        screen.blit(self.button_text, self.button_rect)
-
+            key_label, key_rect = keyboard_key(disp_name, key_color, rect)
+            SCREEN.blit(key_label, key_rect)
 
     def handle_click(self, pos):
         # Check if the click is inside a key's rectangle
@@ -184,51 +151,49 @@ class KeySelection():
                     print("Selected keys: ", clicked_keys)
                     print("Selected keys amount: ", len(clicked_keys))
 
+                return
+
+
 
 def key_selection(keys):
-    global clicked_keys, screen
+    global clicked_keys, SCREEN
     ks = KeySelection(keys)
-    screen = ks.screen
-    BG = pygame.image.load(paths.BACKGROUND_IMAGE)
+    SCREEN = ks.screen
+    BG = pygame.image.load(BACKGROUND_IMAGE)
 
     # Create a set to store the clicked keys
     if len(keys) == 0:
         keys = {'pygame.K_SPACE', 'pygame.K_UP', 'pygame.K_DOWN', 'pygame.K_RIGHT', 'pygame.K_LEFT'}
     clicked_keys = keys
 
+    HEADER, HEADER_RECT = header("CONTROLS")
+    SUBHEAD, SUBHEAD_RECT = subhead("SELECT THE RELEVANT KEYS FOR YOUR GAME", 16)
+
     # Start the main game loop
-    running = True
-    while running:
+    while True:
+        MENU_MOUSE_POS = pg.mouse.get_pos()
+
+        BACK_BTN = back_btn()
+        BACK_BTN.change_color(MENU_MOUSE_POS)
+
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                return clicked_keys
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                ks.handle_click(pos)
+                ks.handle_click(MENU_MOUSE_POS)
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 # Check if the mouse is over the button
-                if ks.button_rect.collidepoint(event.pos):
-                    running = False
-
-        mouse_pos = pygame.mouse.get_pos()
-
+                if BACK_BTN.check_input(MENU_MOUSE_POS):
+                    return clicked_keys
 
         # Draw the keyboard and update the display
-        screen.blit(BG, (0, 0))
+        SCREEN.blit(BG, (0, 0))
         ks.draw_keyboard()
 
-
-        font = pygame.font.Font(paths.MAIN_FONT, 45)
-        # Check if the mouse is hovering over the text
-        if ks.button_rect.collidepoint(mouse_pos):
-            # Change the text color to red if hovering
-            screen.blit(ks.button_text_hover, ks.button_rect)
-
-        else:
-            screen.blit(ks.button_text, ks.button_rect)
+        BACK_BTN.update(SCREEN)
+        SCREEN.blit(HEADER, HEADER_RECT)
+        SCREEN.blit(SUBHEAD, SUBHEAD_RECT)
 
         pygame.display.flip()
-
-    return clicked_keys
