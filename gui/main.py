@@ -15,7 +15,7 @@ def play():
     # Irrelevant at the moment
     return
 
-    #while True:
+    # while True:
     #    PLAY_MOUSE_POS = pg.mouse.get_pos()
 #
     #    SCREEN.fill("black")
@@ -129,7 +129,7 @@ def main_menu():
         # Game selection
         # A function with auto game detection will replace this sector
         Game1 = manu_btn("Breakout", (230, 400))
-        Game2 = manu_btn( "Snake", (640, 400))
+        Game2 = manu_btn("Snake", (640, 400))
         Game3 = manu_btn("Donkey Kong", (1050, 400))
 
         QUIT_BUTTON = quit_btn()
