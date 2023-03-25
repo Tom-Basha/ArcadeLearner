@@ -130,7 +130,7 @@ def main_menu():
         # A function with auto game detection will replace this sector
         Game1 = manu_btn("Breakout", (230, 400))
         Game2 = manu_btn("Snake", (640, 400))
-        Game3 = manu_btn("Donkey Kong", (1050, 400))
+        Game3 = manu_btn("DonkeyKong", (1050, 400))
 
         QUIT_BUTTON = quit_btn()
 
