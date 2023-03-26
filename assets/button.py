@@ -4,13 +4,14 @@ from assets.paths import *
 
 
 class Button:
-    def __init__(self, pos, text, font, color, hover_color, outline=False, bg=paths.BUTTON_BG,
+    def __init__(self, pos, text, font, color, hover_color=None, outline=False, bg=paths.BUTTON_BG,
                  command=None):
         self.image = pg.image.load(paths.BUTTON_BG) if bg != False else None
         self.x_pos = pos[0]
         self.y_pos = pos[1]
         self.font = font
-        self.base_color, self.hovering_color = color, hover_color
+        self.base_color = color
+        self.hovering_color = hover_color if hover_color != None else color
         self.text_input = text
         self.text = self.font.render(self.text_input, True, self.base_color)
         if self.image is None:
@@ -50,12 +51,8 @@ class Button:
 
 
 # presets
-def quit_btn():
-    return Button((640, 640), "QUIT", get_font(55), MAIN_CLR, SECONDARY_CLR, bg=False)
-
-
-def back_btn():
-    return Button((640, 640), "RETURN", get_font(55), MAIN_CLR, SECONDARY_CLR, bg=False)
+def back_btn(text="RETURN"):
+    return Button((640, 640), text, get_font(55), MAIN_CLR, SECONDARY_CLR, bg=False)
 
 
 def manu_btn(text, pos):

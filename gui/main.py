@@ -1,6 +1,9 @@
 import sys
 import key_selection as ks
 from assets.button import *
+from testings.example import *
+from testings.extract_attributes import *
+
 
 pg.init()
 
@@ -14,31 +17,6 @@ selected_keys = {}
 def play():
     # Irrelevant at the moment
     return
-
-    # while True:
-    #    PLAY_MOUSE_POS = pg.mouse.get_pos()
-#
-    #    SCREEN.fill("black")
-#
-    #    PLAY_TEXT = get_font(45).render("This is the PLAY screen.", True, "White")
-    #    PLAY_RECT = PLAY_TEXT.get_rect(center=(640, 260))
-    #    SCREEN.blit(PLAY_TEXT, PLAY_RECT)
-#
-    #    PLAY_BACK = Button(bg=None, pos=(640, 460),
-    #                       text="BACK", font=get_font(75), color="White", hover_color="Green")
-#
-    #    PLAY_BACK.change_color(PLAY_MOUSE_POS)
-    #    PLAY_BACK.update(SCREEN)
-#
-    #    for event in pg.event.get():
-    #        if event.type == pg.QUIT:
-    #            pg.quit()
-    #            sys.exit()
-    #        if event.type == pg.MOUSEBUTTONDOWN:
-    #            if PLAY_BACK.check_input(PLAY_MOUSE_POS):
-    #                main_menu()
-#
-    #    pg.display.update()
 
 
 def selected_game(game):
@@ -79,7 +57,9 @@ def selected_game(game):
                     selected_keys = ks.key_selection(selected_keys)
                 if FEATURES_BUTTON.check_input(MENU_MOUSE_POS):
                     # attributs = extract_features('game.py')
-                    WIP()
+                    # WIP()
+                    selected_attributes = extract_features('../games/snake_game.py')
+                    selected_attributes = feature_selection(selected_attributes)
                 if PLAY_BACK.check_input(MENU_MOUSE_POS):
                     main_menu()
 
@@ -132,7 +112,7 @@ def main_menu():
         Game2 = manu_btn("Snake", (640, 400))
         Game3 = manu_btn("DonkeyKong", (1050, 400))
 
-        QUIT_BUTTON = quit_btn()
+        QUIT_BUTTON = back_btn("QUIT")
 
         SCREEN.blit(MENU_TEXT, MENU_RECT)
         SCREEN.blit(SECOND_MENU, SECOND_MENU_RECT)
