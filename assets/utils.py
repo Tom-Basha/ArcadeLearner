@@ -10,6 +10,10 @@ WHITE = (255, 255, 255, 0)
 BLACK = (0, 0, 0, 0)
 GREEN = (0, 255, 0, 0)
 
+# Measurements
+SCREEN_W = 1280
+SCREEN_H = 720
+
 
 # Set up font
 def get_font(size):

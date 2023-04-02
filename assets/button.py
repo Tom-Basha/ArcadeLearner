@@ -19,8 +19,8 @@ class Button:
         self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
         self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
         if outline:
-            self.outline = font.render(text, True, WHITE)
-            self.outline_pos = (self.text_rect.x - 1, self.text_rect.y - 1)
+            self.outline = font.render(text, True, BLACK)
+            self.outline_pos = (self.text_rect.x + 2, self.text_rect.y + 3)
         else:
             self.outline = None
         self.command = command
@@ -56,4 +56,4 @@ def back_btn(text="RETURN"):
 
 
 def manu_btn(text, pos):
-    return Button(pos, text, get_font(25), BLACK, "#f0000f", outline=True)
+    return Button(pos, text, get_font(25), WHITE, "#f0000f", outline=True)

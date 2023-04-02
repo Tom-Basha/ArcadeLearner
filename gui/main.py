@@ -1,9 +1,8 @@
-import sys
 import key_selection as ks
-from assets.button import *
+from attribute_selection import *
+from games import snake_game
 from testings.example import *
-from testings.extract_attributes import *
-
+from assets.attribute_extractor import *
 
 pg.init()
 
@@ -14,17 +13,19 @@ BACKGROUND = pg.image.load(paths.BACKGROUND_IMAGE)
 selected_keys = {}
 
 
+
 def play():
     # Irrelevant at the moment
     return
 
 
 def selected_game(game):
-    global selected_keys
+    global selected_keys, selected_attributes
     selected_keys = {}
+    selected_attributes = set()
     while True:
-        SCREEN.blit(BACKGROUND, (0, 0))
         pg.display.set_caption(game)
+        SCREEN.blit(BACKGROUND, (0, 0))
 
         MENU_MOUSE_POS = pg.mouse.get_pos()
 
@@ -44,22 +45,30 @@ def selected_game(game):
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                SCREEN.blit(BACKGROUND, (0, 0))
                 pg.quit()
                 sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 if PLAY_BUTTON.check_input(MENU_MOUSE_POS):
-                    WIP()
+                    # game_process = Process(target=snake_game.GameSnake)
+                    # game_process.start()
+                    # WIP()
+                    snake_game.play()
+                    return
                 if WATCH_BUTTON.check_input(MENU_MOUSE_POS):
                     WIP()
                 if TRAIN_BUTTON.check_input(MENU_MOUSE_POS):
                     WIP()
                 if OPTIONS_BUTTON.check_input(MENU_MOUSE_POS):
+                    # PLACEHOLDER - function that automatically select keys
+
                     selected_keys = ks.key_selection(selected_keys)
                 if FEATURES_BUTTON.check_input(MENU_MOUSE_POS):
-                    # attributs = extract_features('game.py')
-                    # WIP()
-                    selected_attributes = extract_features('../games/snake_game.py')
-                    selected_attributes = feature_selection(selected_attributes)
+                    game_attributes = extract_features('../testings/block.py')
+
+                    # PLACEHOLDER - function that automatically select attributes
+
+                    selected_attributes = attribute_selection(game_attributes, selected_attributes)
                 if PLAY_BACK.check_input(MENU_MOUSE_POS):
                     main_menu()
 
@@ -86,7 +95,7 @@ def WIP():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 if OPTIONS_BACK.check_input(OPTIONS_MOUSE_POS):
                     return
 
@@ -125,7 +134,7 @@ def main_menu():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button:
                 if Game1.check_input(MENU_MOUSE_POS):
                     selected_game("Breakout")
                 if Game2.check_input(MENU_MOUSE_POS):

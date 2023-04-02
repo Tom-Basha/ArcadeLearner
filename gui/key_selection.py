@@ -120,7 +120,6 @@ class KeySelection:
     def draw_keyboard(self):
         keyboard_boarder = pygame.Rect(165, 180, 950, 370)
         pygame.draw.rect(SCREEN, WHITE, keyboard_boarder, 2, border_radius=15)
-
         # Draw the keys
         for key, (rect, disp_name) in self.key_rects.items():
             # Draw the key's top surface
@@ -154,7 +153,6 @@ class KeySelection:
                 return
 
 
-
 def key_selection(keys):
     global clicked_keys, SCREEN
     ks = KeySelection(keys)
@@ -180,20 +178,19 @@ def key_selection(keys):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return clicked_keys
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 ks.handle_click(MENU_MOUSE_POS)
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                # Check if the mouse is over the button
                 if BACK_BTN.check_input(MENU_MOUSE_POS):
                     return clicked_keys
 
         # Draw the keyboard and update the display
         SCREEN.blit(BG, (0, 0))
-        ks.draw_keyboard()
 
         BACK_BTN.update(SCREEN)
         SCREEN.blit(HEADER, HEADER_RECT)
         SCREEN.blit(SUBHEAD, SUBHEAD_RECT)
+
+        ks.draw_keyboard()
 
         pygame.display.flip()
