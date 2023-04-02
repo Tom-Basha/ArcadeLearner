@@ -1,8 +1,7 @@
 import key_selection as ks
 from attribute_selection import *
 from games import snake_game
-from testings.example import *
-from assets.attribute_extractor import *
+from assets.extractors import *
 
 pg.init()
 
@@ -21,6 +20,7 @@ def play():
 
 def selected_game(game):
     global selected_keys, selected_attributes
+    game_path = "../games/snake_game.py"
     selected_keys = {}
     selected_attributes = set()
     while True:
@@ -60,11 +60,11 @@ def selected_game(game):
                 if TRAIN_BUTTON.check_input(MENU_MOUSE_POS):
                     WIP()
                 if OPTIONS_BUTTON.check_input(MENU_MOUSE_POS):
-                    # PLACEHOLDER - function that automatically select keys
-
+                    if len(selected_keys) == 0:
+                        selected_keys = keys_extractor(game_path)
                     selected_keys = ks.key_selection(selected_keys)
                 if FEATURES_BUTTON.check_input(MENU_MOUSE_POS):
-                    game_attributes = extract_features('../testings/block.py')
+                    game_attributes = attribute_extractor(game_path)
 
                     # PLACEHOLDER - function that automatically select attributes
 

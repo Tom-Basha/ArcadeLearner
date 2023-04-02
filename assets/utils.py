@@ -21,20 +21,24 @@ def get_font(size):
 
 
 # Labels presets
-def header(text, pos=(640, 85)):
-    label = get_font(70).render(text, True, MAIN_CLR)
-    rect = label.get_rect(center=pos)
+def label_creation(text, size, color, pos, alignment="center"):
+    label = get_font(size).render(text, True, color)
+    rect = label.get_rect()
+    setattr(rect, alignment, pos)
     return label, rect
+
+
+def header(text, pos=(640, 85)):
+    return label_creation(text, 70, MAIN_CLR, pos)
 
 
 def subhead(text, size=30, pos=(640, 135)):
-    label = get_font(size).render(text, True, SECONDARY_CLR)
-    rect = label.get_rect(center=pos)
-    return label, rect
+    return label_creation(text, size, SECONDARY_CLR, pos)
 
 
 def keyboard_key(text, color, pos):
-    label = get_font(12).render(text, True, color)
-    rect = label.get_rect(center=pos.center)
-    return label, rect
+    return label_creation(text, 12, color, pos.center)
 
+
+def attribute_header(text, color, pos, size):
+    return label_creation(text, size, color, pos, "topleft")

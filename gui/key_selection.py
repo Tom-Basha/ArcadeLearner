@@ -41,7 +41,7 @@ class KeySelection:
             self.curr_x = 183
 
         # esc row
-        draw_key('pygame.K_ESC', 'ESC', 0)
+        draw_key('pygame.K_ESCAPE', 'ESC', 0)
         self.curr_x += 45
         draw_key('pygame.K_F1', 'F1', 0)
         draw_key('pygame.K_F2', 'F2', 0)
@@ -162,6 +162,8 @@ def key_selection(keys):
     # Create a set to store the clicked keys
     if len(keys) == 0:
         keys = {'pygame.K_SPACE', 'pygame.K_UP', 'pygame.K_DOWN', 'pygame.K_RIGHT', 'pygame.K_LEFT'}
+    if "pygame.K_ESCAPE" in keys:
+        keys.remove("pygame.K_ESCAPE")
     clicked_keys = keys
 
     HEADER, HEADER_RECT = header("CONTROLS")

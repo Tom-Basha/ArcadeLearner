@@ -31,6 +31,9 @@ class AttributeList:
         self.list_height += len(self.classes) * 70
         if len(self.classes) > 1:
             self.list_height += (len(self.classes) - 1) * 80
+        self.headers_space = 70
+        self.classes_space = 150
+
         # Screen creation
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Attributes")
@@ -62,22 +65,18 @@ class AttributeList:
                          border_radius=10)
 
     def add_headers(self, class_name, rects, x=190, y=200):
-        label = get_font(25).render("Class Name: \'" + class_name + "\'", True, SECONDARY_CLR)
-        rect = label.get_rect(topleft=(x, y))
+        label, rect = attribute_header("Class Name: \'" + class_name + "\'", SECONDARY_CLR, (x, y), 25)
         if self.top_margin <= rect.y <= SCREEN_H - self.bottom_margin - rect.height:
             self.screen.blit(label, rect)
 
         y += 30
 
-        label = get_font(25).render("Attributes:", True, SECONDARY_CLR)
-        rect = label.get_rect(topleft=(x, y))
+        label, rect = attribute_header("Attributes:", SECONDARY_CLR, (x, y), 25)
         if self.top_margin <= rect.y <= SCREEN_H - self.bottom_margin - rect.height:
             self.screen.blit(label, rect)
 
     def render_list(self, selected_items):
         position = (SCREEN_W // 8 + 30, self.scroll_offset)
-        headers_space = 70
-        classes_space = 150
         curr_y = self.top_margin
         rects = []
         for j, class_info in enumerate(self.classes):
@@ -93,7 +92,7 @@ class AttributeList:
                 if i == 0:
                     self.add_headers(class_name, rects, y=y)
 
-                y += headers_space
+                y += self.headers_space
                 item_text = class_name + "." + item
                 text_color = GREEN if item_text in selected_items else WHITE
                 rect = pygame.Rect(x, y, self.item_w, self.item_h)
@@ -108,7 +107,7 @@ class AttributeList:
                     pygame.draw.rect(self.screen, text_color, border_rect, 3, border_radius=10)
 
                 if i == len(class_attributes) - 1:
-                    curr_y += (self.items_spacing + self.item_h) * items_per_column + classes_space
+                    curr_y += (self.items_spacing + self.item_h) * items_per_column + self.classes_space
         return rects
 
     def handle_scrollbar(self, event):

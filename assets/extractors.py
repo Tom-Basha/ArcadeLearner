@@ -1,7 +1,18 @@
 import ast
+import re
 
 
-def extract_features(file_path):
+def keys_extractor(file_path):
+    key_pattern = r"pygame\.K_[A-Za-z0-9_]+"
+
+    with open(file_path, 'r') as file:
+        content = file.read()
+
+    keys = set(re.findall(key_pattern, content))
+    return keys
+
+
+def attribute_extractor(file_path):
     with open(file_path, "r") as f:
         tree = ast.parse(f.read())
         class_features = {}
