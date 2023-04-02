@@ -1,6 +1,6 @@
 import key_selection as ks
 from attribute_selection import *
-from games import snake_game
+from games import snake
 from assets.extractors import *
 from assets.error import *
 
@@ -19,12 +19,21 @@ def play():
     return
 
 
-def selected_game(game):
+def selected_game(game, path):
     global selected_keys, selected_attributes
-    game_path = "../games/snake_game.py"
+    game_path = path
     selected_keys = {}
     selected_attributes = set()
+
+    PLAY_BTN = manu_btn("Play", (270, 280))
+    WATCH_BTN = manu_btn("Watch AI", (640, 280))
+    TRAIN_BTN = manu_btn("Train AI", (1010, 280))
+    CONTROLS_BTN = manu_btn("Controls", (450, 440))
+    ATTRIBUTES_BTN = manu_btn("Attributes", (820, 440))
+    PLAY_BACK = back_btn()
+
     while True:
+        SCREEN = pg.display.set_mode((1280, 720))
         pg.display.set_caption(game)
         SCREEN.blit(BACKGROUND, (0, 0))
 
@@ -33,38 +42,38 @@ def selected_game(game):
         HEADER, HEADER_RECT = header(game)
         SCREEN.blit(HEADER, HEADER_RECT)
 
-        PLAY_BUTTON = manu_btn("Play", (230, 250))
-        WATCH_BUTTON = manu_btn("Watch AI", (640, 250))
-        TRAIN_BUTTON = manu_btn("Train AI", (1050, 250))
-        OPTIONS_BUTTON = manu_btn("Controls", (430, 420))
-        FEATURES_BUTTON = manu_btn("Attributes", (840, 420))
-        PLAY_BACK = back_btn()
-
-        for button in [PLAY_BUTTON, WATCH_BUTTON, TRAIN_BUTTON, OPTIONS_BUTTON, FEATURES_BUTTON, PLAY_BACK]:
+        for button in [PLAY_BTN, WATCH_BTN, TRAIN_BTN, CONTROLS_BTN, ATTRIBUTES_BTN, PLAY_BACK]:
             button.change_color(MENU_MOUSE_POS)
             button.update(SCREEN)
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                SCREEN.blit(BACKGROUND, (0, 0))
                 pg.quit()
                 sys.exit()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                if PLAY_BUTTON.check_input(MENU_MOUSE_POS):
-                    # game_process = Process(target=snake_game.GameSnake)
-                    # game_process.start()
-                    # WIP()
-                    snake_game.play()
-                    return
-                if WATCH_BUTTON.check_input(MENU_MOUSE_POS):
-                    WIP()
-                if TRAIN_BUTTON.check_input(MENU_MOUSE_POS):
-                    WIP()
-                if OPTIONS_BUTTON.check_input(MENU_MOUSE_POS):
+                if PLAY_BTN.check_input(MENU_MOUSE_POS):
+                    try:
+                        with open(game_path, 'r') as f:
+                            code = f.read()
+                            exec(code, globals())
+                    except Exception as e:
+                        print(f"Error while running {game_path}: {e}")
+
+                if WATCH_BTN.check_input(MENU_MOUSE_POS):
+                    error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
+
+                    # PLACEHOLDER - AI WATCH
+
+                if TRAIN_BTN.check_input(MENU_MOUSE_POS):
+                    error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
+
+                    # PLACEHOLDER - AI train
+
+                if CONTROLS_BTN.check_input(MENU_MOUSE_POS):
                     if len(selected_keys) == 0:
                         selected_keys = keys_extractor(game_path)
                     selected_keys = ks.key_selection(selected_keys)
-                if FEATURES_BUTTON.check_input(MENU_MOUSE_POS):
+                if ATTRIBUTES_BTN.check_input(MENU_MOUSE_POS):
                     game_attributes = attribute_extractor(game_path)
 
                     # PLACEHOLDER - function that automatically select attributes
@@ -76,34 +85,10 @@ def selected_game(game):
         pg.display.update()
 
 
-# Delete WIP after initiating **ALL** buttons functions
-def WIP():
-    BG = pg.image.load(BACKGROUND_IMAGE)
-
-    while True:
-        OPTIONS_MOUSE_POS = pg.mouse.get_pos()
-
-        SCREEN.blit(BG, (0, 0))
-
-        OPTIONS_TEXT, OPTIONS_RECT = subhead("WORK IN PROGRESS", pos=(640, 260))
-        SCREEN.blit(OPTIONS_TEXT, OPTIONS_RECT)
-
-        OPTIONS_BACK = back_btn()
-        OPTIONS_BACK.change_color(OPTIONS_MOUSE_POS)
-        OPTIONS_BACK.update(SCREEN)
-
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                if OPTIONS_BACK.check_input(OPTIONS_MOUSE_POS):
-                    return
-
-        pg.display.update()
-
-
 def main_menu():
+    games_list = games_extractor()
+    buttons = games_buttons(games_list)
+    QUIT_BUTTON = back_btn("QUIT")
     while True:
         # Init screen
         pg.display.set_caption("Generic Arcade AI")
@@ -114,20 +99,12 @@ def main_menu():
 
         # Labels
         MENU_TEXT, MENU_RECT = header("Generic Arcade AI")
-        SECOND_MENU, SECOND_MENU_RECT = subhead("Pick Your Game of Choice", pos=(640, 270))
-
-        # Game selection
-        # A function with auto game detection will replace this sector
-        Game1 = manu_btn("Breakout", (230, 400))
-        Game2 = manu_btn("Snake", (640, 400))
-        Game3 = manu_btn("DonkeyKong", (1050, 400))
-
-        QUIT_BUTTON = back_btn("QUIT")
+        SECOND_MENU, SECOND_MENU_RECT = subhead("Pick Your Game of Choice", pos=(640, 150))
 
         SCREEN.blit(MENU_TEXT, MENU_RECT)
         SCREEN.blit(SECOND_MENU, SECOND_MENU_RECT)
 
-        for button in [Game1, Game2, Game3, QUIT_BUTTON]:
+        for button in [QUIT_BUTTON] + buttons:
             button.change_color(MENU_MOUSE_POS)
             button.update(SCREEN)
 
@@ -136,12 +113,9 @@ def main_menu():
                 pg.quit()
                 sys.exit()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button:
-                if Game1.check_input(MENU_MOUSE_POS):
-                    error_msg("GAME NOT FOUND")
-                if Game2.check_input(MENU_MOUSE_POS):
-                    selected_game("Snake")
-                if Game3.check_input(MENU_MOUSE_POS):
-                    selected_game("Donkey Kong")
+                for i, button in enumerate(buttons):
+                    if button.check_input(MENU_MOUSE_POS):
+                        selected_game(games_list[i][0], games_list[i][1])
                 if QUIT_BUTTON.check_input(MENU_MOUSE_POS):
                     pg.quit()
                     sys.exit()

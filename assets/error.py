@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 from assets.utils import *
 
@@ -8,10 +10,10 @@ def error_msg(message):
 
     # Get the current Pygame screen
     screen = pygame.display.get_surface()
+    width, height = screen.get_size()
+
     # Save the current background
     background = screen.copy()
-
-    width, height = screen.get_size()
 
     # Create a surface to dim the screen
     dimmer = pygame.Surface((width, height))
@@ -20,7 +22,7 @@ def error_msg(message):
 
     # Create a font for the message
 
-    error_title, error_rect = label_creation("ERROR", 35, ERROR_CLR, (SCREEN_W // 2, SCREEN_H // 2 - 40))
+    error_title, error_rect = label_creation("ERROR", 40, ERROR_CLR, (SCREEN_W // 2, SCREEN_H // 2 - 45))
     msg, msg_rect = label_creation(message, 25, WHITE, (SCREEN_W // 2, 720 // 2))
     inst, inst_rect = label_creation("PRESS ANY KEY TO RETURN", 12, SECONDARY_CLR, (SCREEN_W // 2, 720 // 2 + 30))
     visible = True
@@ -30,6 +32,9 @@ def error_msg(message):
     # Wait for a mouse click, keyboard click, or timeout
     while True:
         for event in pygame.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return
             if event.type == BLINK_EVENT:

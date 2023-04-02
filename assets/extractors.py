@@ -1,5 +1,20 @@
 import ast
 import re
+import os
+import games
+
+
+def games_extractor():
+    games_list = []
+    folder_path = "..\\games"
+    for game in os.listdir(folder_path):
+        if game.endswith(".py"):
+            file_path = os.path.join(folder_path, game)
+            file_name_without_ext = os.path.splitext(game)[0]
+            file_name = file_name_without_ext.replace("_", " ").title()
+            games_list.append((file_name, file_path))
+    print(games_list)
+    return games_list
 
 
 def keys_extractor(file_path):
