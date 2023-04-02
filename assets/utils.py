@@ -5,6 +5,8 @@ pg.font.init()
 
 # Colors Presets
 MAIN_CLR = "#b68f40"
+ERROR_CLR = "#ff0000"
+ERROR2_CLR = "#aa0000"
 SECONDARY_CLR = "#f6fcd4"
 WHITE = (255, 255, 255, 0)
 BLACK = (0, 0, 0, 0)

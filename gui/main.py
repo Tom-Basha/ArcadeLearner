@@ -2,6 +2,7 @@ import key_selection as ks
 from attribute_selection import *
 from games import snake_game
 from assets.extractors import *
+from assets.error import *
 
 pg.init()
 
@@ -136,7 +137,7 @@ def main_menu():
                 sys.exit()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button:
                 if Game1.check_input(MENU_MOUSE_POS):
-                    selected_game("Breakout")
+                    error_msg("GAME NOT FOUND")
                 if Game2.check_input(MENU_MOUSE_POS):
                     selected_game("Snake")
                 if Game3.check_input(MENU_MOUSE_POS):

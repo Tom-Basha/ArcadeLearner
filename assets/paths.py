@@ -7,7 +7,8 @@ FONTS = os.path.join(BASE_PATH, "fonts")
 
 # Define the file paths for specific assets
 BACKGROUND_IMAGE = os.path.join(IMAGES, "background.jpg")
-BUTTON_BG = os.path.join(IMAGES, "button bg3.png")
+BUTTON_BG = os.path.join(IMAGES, "buttonBG1.png")
 QUIT_BG = os.path.join(IMAGES, "Quit Rect.jpg")
 OPTIONS_BG = os.path.join(IMAGES, "Options Rect.jpg")
 MAIN_FONT = os.path.join(FONTS, "font.ttf")
+ERROR_NEON = os.path.join(IMAGES, "error neon1.png")
