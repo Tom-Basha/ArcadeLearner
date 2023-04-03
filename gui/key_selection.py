@@ -1,6 +1,7 @@
 import pygame
 import pygame.gfxdraw
 from assets.button import *
+from assets.paths import *
 
 
 class KeySelection:

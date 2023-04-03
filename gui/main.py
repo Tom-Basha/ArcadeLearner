@@ -57,7 +57,8 @@ def selected_game(game, path):
                             code = f.read()
                             exec(code, globals())
                     except Exception as e:
-                        print(f"Error while running {game_path}: {e}")
+                        pg.display.set_mode((1280, 720))
+                        error_msg(f"Error while running {game_path}: {e}")
 
                 if WATCH_BTN.check_input(MENU_MOUSE_POS):
                     error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
