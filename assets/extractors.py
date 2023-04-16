@@ -1,7 +1,8 @@
 import ast
 import re
 import os
-import games
+
+from testings.key_map import key_mapping
 
 
 def games_extractor():
@@ -18,14 +19,17 @@ def games_extractor():
 
 
 def keys_extractor(file_path):
-    key_pattern = r"pygame\.K_[A-Za-z0-9_]+"
+    key_pattern = r"(pygame\.K_[A-Za-z0-9_]+)"
 
     with open(file_path, 'r') as file:
         content = file.read()
 
-    keys = set(re.findall(key_pattern, content))
-    return keys
+    keys = re.findall(key_pattern, content)
 
+    if "pygame.K_ESCAPE" in keys:
+        keys.remove("pygame.K_ESCAPE")
+
+    return keys
 
 def attribute_extractor(file_path):
     with open(file_path, "r") as f:
@@ -44,3 +48,5 @@ def attribute_extractor(file_path):
                                         class_features[class_name].append(target.attr)
     # print([(class_name, attrs) for class_name, attrs in class_features.items()])
     return [(class_name, attrs) for class_name, attrs in class_features.items()]
+
+

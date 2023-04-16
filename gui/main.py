@@ -1,8 +1,9 @@
 import key_selection as ks
+from agents.NEAT.train import Trainer
 from attribute_selection import *
-from games import snake
 from assets.extractors import *
 from assets.error import *
+from testings.attribute_value import *
 
 pg.init()
 
@@ -13,16 +14,10 @@ BACKGROUND = pg.image.load(paths.BACKGROUND_IMAGE)
 selected_keys = {}
 
 
-
-def play():
-    # Irrelevant at the moment
-    return
-
-
 def selected_game(game, path):
     global selected_keys, selected_attributes
     game_path = path
-    selected_keys = {}
+    selected_keys = keys_extractor(game_path)
     selected_attributes = set()
 
     PLAY_BTN = manu_btn("Play", (270, 280))
@@ -31,6 +26,12 @@ def selected_game(game, path):
     CONTROLS_BTN = manu_btn("Controls", (450, 440))
     ATTRIBUTES_BTN = manu_btn("Attributes", (820, 440))
     PLAY_BACK = back_btn()
+
+    game_attributes = attribute_extractor(game_path)
+    # selected_attributes = attributes_extractor(game_attributes)
+
+    # selected_attributes = {'direction', 'food_pos', 'snake_pos', 'score'}
+    selected_attributes = {'Bird': ['score', 'center'], 'Pillar': ['gap_height', 'x']}
 
     while True:
         SCREEN = pg.display.set_mode((1280, 720))
@@ -52,13 +53,7 @@ def selected_game(game, path):
                 sys.exit()
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 if PLAY_BTN.check_input(MENU_MOUSE_POS):
-                    try:
-                        with open(game_path, 'r') as f:
-                            code = f.read()
-                            exec(code, globals())
-                    except Exception as e:
-                        pg.display.set_mode((1280, 720))
-                        error_msg(f"Error while running {game_path}: {e}")
+                    subprocess.run(["python", game_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 
                 if WATCH_BTN.check_input(MENU_MOUSE_POS):
                     error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
@@ -66,20 +61,22 @@ def selected_game(game, path):
                     # PLACEHOLDER - AI WATCH
 
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
+                    print(selected_keys)
+                    trainer = Trainer(game, path, selected_attributes, selected_keys)
+                    trainer.neat_setup()
                     error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
 
                     # PLACEHOLDER - AI train
 
                 if CONTROLS_BTN.check_input(MENU_MOUSE_POS):
-                    if len(selected_keys) == 0:
-                        selected_keys = keys_extractor(game_path)
                     selected_keys = ks.key_selection(selected_keys)
                 if ATTRIBUTES_BTN.check_input(MENU_MOUSE_POS):
-                    game_attributes = attribute_extractor(game_path)
 
                     # PLACEHOLDER - function that automatically select attributes
 
                     selected_attributes = attribute_selection(game_attributes, selected_attributes)
+                    print(selected_attributes)
+
                 if PLAY_BACK.check_input(MENU_MOUSE_POS):
                     main_menu()
 

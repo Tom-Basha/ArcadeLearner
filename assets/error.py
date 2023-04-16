@@ -9,7 +9,7 @@ def error_msg(message):
     def adjust_font_size(message, min_size, max_size, max_width):
         font_size = max_size
         while font_size >= min_size:
-            font = pygame.font.Font(None, font_size)
+            font = get_font(font_size)
             msg_lines = wrap_text(message, font, max_width)
             if len(msg_lines) * font.get_linesize() <= max_width:
                 return font, msg_lines

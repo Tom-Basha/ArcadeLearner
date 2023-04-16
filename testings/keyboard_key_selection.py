@@ -34,7 +34,7 @@ class KeySelection:
 
         def draw_row(row):
             for i, key in enumerate(row):
-                key_name = "pygame.K_" + key.lower()
+                key_name = key.lower()
                 draw_key(key_name, key, 0)
 
         def next_row():
@@ -42,81 +42,81 @@ class KeySelection:
             self.curr_x = 183
 
         # esc row
-        draw_key('pygame.K_ESCAPE', 'ESC', 0)
+        draw_key('escape', 'ESC', 0)
         self.curr_x += 45
-        draw_key('pygame.K_F1', 'F1', 0)
-        draw_key('pygame.K_F2', 'F2', 0)
-        draw_key('pygame.K_F3', 'F3', 0)
-        draw_key('pygame.K_F4', 'F4', 0)
+        draw_key('F1', 'F1', 0)
+        draw_key('F2', 'F2', 0)
+        draw_key('F3', 'F3', 0)
+        draw_key('F4', 'F4', 0)
         self.curr_x += 25
-        draw_key('pygame.K_F5', 'F5', 0)
-        draw_key('pygame.K_F6', 'F6', 0)
-        draw_key('pygame.K_F7', 'F7', 0)
-        draw_key('pygame.K_F8', 'F8', 0)
+        draw_key('F5', 'F5', 0)
+        draw_key('F6', 'F6', 0)
+        draw_key('F7', 'F7', 0)
+        draw_key('F8', 'F8', 0)
         self.curr_x += 25
-        draw_key('pygame.K_F9', 'F9', 0)
-        draw_key('pygame.K_F10', 'F10', 0)
-        draw_key('pygame.K_F11', 'F11', 0)
-        draw_key('pygame.K_F12', 'F12', 0)
+        draw_key('F9', 'F9', 0)
+        draw_key('F10', 'F10', 0)
+        draw_key('F11', 'F11', 0)
+        draw_key('F12', 'F12', 0)
         self.curr_y += 30
         next_row()
 
         # numbers row
-        draw_key('pygame.K_BACKQUOTE', '`', 0)
+        draw_key('`', '`', 0)
         draw_row(self.row_1)
-        draw_key('pygame.K_MINUS', '-', 0)
-        draw_key('pygame.K_EQUALS', '=', 0)
-        draw_key('pygame.K_BACKSPACE', '\u2190', 45)
+        draw_key('-', '-', 0)
+        draw_key('=', '=', 0)
+        draw_key('backspace', '\u2190', 45)
         self.curr_x += 20
-        draw_key('pygame.K_INSERT', 'Ins', 0)
-        draw_key('pygame.K_HOME', 'Home', 0)
-        draw_key('pygame.K_PAGEUP', 'Pg\u2191', 0)
+        draw_key('insert', 'Ins', 0)
+        draw_key('home', 'Home', 0)
+        draw_key('pageup', 'Pg\u2191', 0)
         next_row()
 
         # tab row
-        draw_key('pygame.K_TAB', 'TAB', 20)
+        draw_key('tab', 'TAB', 20)
         draw_row(self.row_2)
-        draw_key('pygame.K_LEFTBRACKET', '[', 0)
-        draw_key('pygame.K_RIGHTBRACKET', ']', 0)
-        draw_key('pygame.K_BACKSLASH', '\\', 25)
+        draw_key('[', '[', 0)
+        draw_key(']', ']', 0)
+        draw_key('\\', '\\', 25)
         self.curr_x += 20
-        draw_key('pygame.K_DELETE', 'Del', 0)
-        draw_key('pygame.K_END', 'End', 0)
-        draw_key('pygame.K_PAGEDOWN', 'Pg\u2193', 0)
+        draw_key('delete', 'Del', 0)
+        draw_key('end', 'End', 0)
+        draw_key('pagedown', 'Pg\u2193', 0)
         next_row()
 
         # caps row
-        draw_key('pygame.K_CAPSLOCK', 'CAPS', 30)
+        draw_key('capslock', 'CAPS', 30)
         draw_row(self.row_3)
-        draw_key('pygame.K_SEMICOLON', ';', 0)
-        draw_key('pygame.K_QUOTE', '\'', 0)
-        draw_key('pygame.K_RETURN', 'ENTER', 65)
+        draw_key(';', ';', 0)
+        draw_key('\'', '\'', 0)
+        draw_key('enter', 'ENTER', 65)
         next_row()
 
         # shift row
-        draw_key('pygame.K_LSHIFT', 'SHIFT', 50)
+        draw_key('leftshift', 'SHIFT', 50)
         draw_row(self.row_4)
-        draw_key('pygame.K_COMMA', ',', 0)
-        draw_key('pygame.K_PERIOD', '.', 0)
-        draw_key('pygame.K_SLASH', '/', 0)
-        draw_key('pygame.K_RSHIFT', 'SHIFT', 95)
+        draw_key(',', ',', 0)
+        draw_key('.', '.', 0)
+        draw_key('/', '/', 0)
+        draw_key('rightshift', 'SHIFT', 95)
         self.curr_x += 70
-        draw_key('pygame.K_UP', '\u2191', 0)
+        draw_key('up', '\u2191', 0)
         next_row()
 
         # ctrl row
-        draw_key('pygame.K_LCTRL', 'CTRL', 20)
-        draw_key('pygame.K_LMETA', 'WIN', 0)
-        draw_key('pygame.K_LALT', 'ALT', 10)
-        draw_key('pygame.K_SPACE', '', 270)
-        draw_key('pygame.K_RALT', 'ALT', 15)
-        draw_key('pygame.K_RMETA', 'FN', 0)
-        draw_key('pygame.K_MENU', 'OPT', 0)
-        draw_key('pygame.K_RCTRL', 'CTRL', 30)
+        draw_key('leftctrl', 'CTRL', 20)
+        draw_key('leftmeta', 'WIN', 0)
+        draw_key('leftalt', 'ALT', 10)
+        draw_key('space', '', 270)
+        draw_key('rightalt', 'ALT', 15)
+        draw_key('rightmeta', 'FN', 0)
+        draw_key('menu', 'OPT', 0)
+        draw_key('rightctrl', 'CTRL', 30)
         self.curr_x += 20
-        draw_key('pygame.K_LEFT', '\u2190', 0)
-        draw_key('pygame.K_DOWN', '\u2193', 0)
-        draw_key('pygame.K_RIGHT', '\u2192', 0)
+        draw_key('left', '\u2190', 0)
+        draw_key('down', '\u2193', 0)
+        draw_key('right', '\u2192', 0)
 
     def draw_keyboard(self):
         keyboard_boarder = pygame.Rect(165, 180, 950, 370)
@@ -162,11 +162,9 @@ def key_selection(keys):
 
     # Create a set to store the clicked keys
     if len(keys) == 0:
-        keys = {'pygame.K_SPACE', 'pygame.K_UP', 'pygame.K_DOWN', 'pygame.K_RIGHT', 'pygame.K_LEFT'}
-    else:
-        keys = set(keys)
-    if "pygame.K_ESCAPE" in keys:
-        keys.remove('pygame.K_ESCAPE')
+        keys = {'space', 'up', 'down', 'right', 'left'}
+    if "escape" in keys:
+        keys.remove("escape")
     clicked_keys = keys
 
     HEADER, HEADER_RECT = header("CONTROLS")
@@ -187,7 +185,6 @@ def key_selection(keys):
                 ks.handle_click(MENU_MOUSE_POS)
 
                 if BACK_BTN.check_input(MENU_MOUSE_POS):
-                    print(clicked_keys)
                     return clicked_keys
 
         # Draw the keyboard and update the display
@@ -200,3 +197,4 @@ def key_selection(keys):
         ks.draw_keyboard()
 
         pygame.display.flip()
+
