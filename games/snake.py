@@ -13,7 +13,7 @@ import sys
 
 class GameSnake:
     def __init__(self):
-        self.difficulty = 60
+        self.difficulty = 30
 
         self.frame_size_x = 720
         self.frame_size_y = 480
@@ -23,11 +23,9 @@ class GameSnake:
         if check_errors[1] > 0:
             print(f'[!] Had {check_errors[1]} errors when initialising game, exiting...')
             sys.exit(-1)
-        # else:
-        #     print('[+] Game successfully initialised')
 
         # Initialise game window
-        pygame.display.set_caption('Snake Eater')
+        pygame.display.set_caption('Snake')
         self.game_window = pygame.display.set_mode((self.frame_size_x, self.frame_size_y))
 
         # Colors (R, G, B)
@@ -42,6 +40,7 @@ class GameSnake:
 
         # Game variables
         self.snake_pos = [100, 50]
+        self.possible_move = [0, 1, 1, 1]   # left, up, right, down
         self.snake_body = [[100, 50], [100 - 10, 50], [100 - (2 * 10), 50]]
         self.lives = 1
         self.food_pos = [random.randrange(1, (self.frame_size_x // 10)) * 10,
@@ -69,11 +68,17 @@ class GameSnake:
 
 def run():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('localhost', 8888))
-    instructions = pickle.loads(s.recv(4096))
-    # print(f"Requested attributes: {instructions}")
+    connected = False
+    try:
+        s.connect(('localhost', 8888))
+        instructions = pickle.loads(s.recv(4096))
+        print(f"Requested attributes: {instructions}")
+        connected = True
+    except ConnectionRefusedError:
+        pass
 
     snake = GameSnake()
+    active_obj = [snake]
 
     while True:
 
@@ -162,16 +167,17 @@ def run():
         # Frame Per Second /Refresh Rate
         snake.fps_controller.tick(snake.difficulty)
 
-        data = []
-        for attribute in instructions:
-            data.append(str(getattr(snake, attribute)))
-        data = dict(zip(instructions, data))
-        s.sendall(pickle.dumps(data))
-        action = s.recv(4096)
-        action = pickle.loads(action)
-        if action != 0:
-            pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
-        time.sleep(0.001)
+        if connected:
+            data = []
+            for attribute in instructions:
+                data.append(str(getattr(snake, attribute)))
+            data = dict(zip(instructions, data))
+            s.sendall(pickle.dumps(data))
+            action = s.recv(4096)
+            action = pickle.loads(action)
+            if action != 0:
+                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+            time.sleep(0.001)
 
     s.close()
     return

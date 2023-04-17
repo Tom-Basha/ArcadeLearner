@@ -29,7 +29,7 @@ def keys_extractor(file_path):
     if "pygame.K_ESCAPE" in keys:
         keys.remove("pygame.K_ESCAPE")
 
-    return keys
+    return set(keys)
 
 def attribute_extractor(file_path):
     with open(file_path, "r") as f:

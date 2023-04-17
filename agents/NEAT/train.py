@@ -5,9 +5,6 @@ import random
 import re
 import socket
 import subprocess
-import win32api
-
-import keyboard
 import numpy as np
 import pygame
 import neat
@@ -25,7 +22,7 @@ class Trainer:
         self.game_name = game_name
         self.game_path = game_path
         self.inputs = inputs
-        self.outputs = np.array(list(outputs))
+        self.outputs = list(outputs)
         self.socket = None
 
     def train_ai(self, genome, config):
@@ -41,22 +38,22 @@ class Trainer:
         # print("Data sent.")
 
         score = 0
-        duration = 0
         start_time = time.time()
         while True:
             data = client_socket.recv(4096)
             if data:
                 data = pickle.loads(data)
                 input_arr = np.array([])
-
-                for s in data.values():
+                for s in data:
+                    value = s
                     if '[' in s:  # If the string contains an inner list
-                        arr = np.array(eval(s))  # Use the eval() function to convert the string to a list
+                        arr = np.array(eval(value))  # Use the eval() function to convert the string to a list
                         input_arr = np.concatenate(
                             (input_arr, arr.flatten()))  # Flatten the inner list and add to the input array
                     else:
-                        input_arr = np.append(input_arr, float(s))
-                score = float(data['score'])
+                        if s[0] == 'score':
+                            score = float(s[1])
+                        input_arr = np.append(input_arr, float(s[1]))
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -111,7 +108,7 @@ class Trainer:
             pickle.dump(winner, f)
 
     def neat_setup(self):
-        config_path = "C:\\Users\\tomba\\OneDrive\\Desktop\\FinalProject\\agents\\NEAT\\config.txt"
+        config_path = "C:\\Users\\PC\\Networks\\FinalProject\\agents\\NEAT\\config.txt"
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                              neat.DefaultSpeciesSet, neat.DefaultStagnation,
                              config_path)

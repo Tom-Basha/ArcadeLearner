@@ -18,7 +18,7 @@ def selected_game(game, path):
     global selected_keys, selected_attributes
     game_path = path
     selected_keys = keys_extractor(game_path)
-    selected_attributes = set()
+    selected_attributes = {}
 
     PLAY_BTN = manu_btn("Play", (270, 280))
     WATCH_BTN = manu_btn("Watch AI", (640, 280))
@@ -30,8 +30,7 @@ def selected_game(game, path):
     game_attributes = attribute_extractor(game_path)
     # selected_attributes = attributes_extractor(game_attributes)
 
-    # selected_attributes = {'direction', 'food_pos', 'snake_pos', 'score'}
-    selected_attributes = {'Bird': ['score', 'center'], 'Pillar': ['gap_height', 'x']}
+    selected_attributes = {'Bird': ['score', 'x', 'y'], 'Pillar': ['x_pos', 'bottom_height', 'gap_height']}
 
     while True:
         SCREEN = pg.display.set_mode((1280, 720))

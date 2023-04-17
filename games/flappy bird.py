@@ -1,4 +1,7 @@
-import gc
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import pickle
 import socket
 import time
@@ -6,6 +9,7 @@ import time
 import pygame
 import random
 import sys
+
 
 pygame.init()
 
@@ -26,12 +30,15 @@ class Bird(pygame.sprite.Sprite):
         self.image = pygame.Surface((20, 20))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH // 2, HEIGHT // 2)
+        self.x = WIDTH // 2
+        self.y = HEIGHT // 2
+        self.rect.center = (self.x, self.y)
         self.velocity = 0
         self.score = 0
 
     def update(self):
         self.velocity -= 0.5
+        self.y -= self.velocity
         self.rect.y -= self.velocity
 
     def flap(self):
@@ -41,7 +48,7 @@ class Bird(pygame.sprite.Sprite):
 class Pillar(pygame.sprite.Sprite):
     def __init__(self, x):
         super().__init__()
-        self.gap_height = 150
+        self.gap_height = 200
         self.top_height = random.randint(50, HEIGHT - self.gap_height - 50)
         self.bottom_height = HEIGHT - self.top_height - self.gap_height
 
@@ -54,10 +61,12 @@ class Pillar(pygame.sprite.Sprite):
         pygame.draw.rect(self.image, BLACK, self.bottom_rect)
 
         self.rect = self.image.get_rect()
+        self.x_pos = x
         self.rect.x = x
         self.passed = False
 
     def update(self):
+        self.x_pos = -3
         self.rect.x -= 3
 
 
@@ -79,9 +88,14 @@ def pillar_collision(bird, pillars):
 
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('localhost', 8888))
-    instructions = pickle.loads(s.recv(4096))
-    print(f"Requested attributes: {instructions}")
+    connected = False
+    try:
+        s.connect(('localhost', 8888))
+        instructions = pickle.loads(s.recv(4096))
+        # print(f"Requested attributes: {instructions}")
+        connected = True
+    except ConnectionRefusedError:
+        pass
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Flappy")
@@ -91,7 +105,10 @@ def main():
     all_sprites = pygame.sprite.Group(bird)
     pillars = pygame.sprite.Group()
 
+    active_objects = [bird, Pillar(-30), Pillar(-30), Pillar(-30)]
+
     pillar_spawn_counter = 0
+    total_pillars = 0
     spawn_target = 350 // 3  # Dividing by the pillar speed (3) to get the required number of frames
 
     while True:
@@ -106,8 +123,10 @@ def main():
         # Spawn pillars
         pillar_spawn_counter += 1
         if pillar_spawn_counter == spawn_target:
+            total_pillars += 1
             pillar = Pillar(WIDTH)
             all_sprites.add(pillar)
+            active_objects[total_pillars % 3 + 1] = pillar
             pillars.add(pillar)
             pillar_spawn_counter = 0
 
@@ -122,6 +141,9 @@ def main():
             if bird.rect.left > pillar.rect.right and not pillar.passed:
                 pillar.passed = True
                 bird.score += 1
+            if pillar.rect.x < 0 - 30:
+                pillars.remove(pillar)
+                all_sprites.remove(pillar)
 
         # Draw
         screen.fill((100, 100, 100))
@@ -138,29 +160,23 @@ def main():
             pygame.time.delay(300)
             break
 
-        clock.tick(60)
+        clock.tick(0)
 
-        data = []
-        for class_name, attributes in instructions.items():
-            print(class_name)
-            # Find the first active object that matches the class name
-            active_objects = [obj for obj in gc.get_objects() if isinstance(obj, (Bird, Pillar))]
-            print("ACTIVE INST: ", active_objects)
+        if connected:
+            data = []
+            for class_name, attributes in instructions.items():
+                obj = next((o for o in active_objects if o.__class__.__name__ == class_name), None)
+                if obj is not None:
+                    for attr in attributes:
+                        if hasattr(obj, attr):
+                            data.append((attr, str(getattr(obj, attr))))
 
-            obj = next((o for o in active_objects if o.__class__.__name__ == class_name), None)
-            print(obj)
-            if obj is not None:
-                for attr in attributes:
-                    if hasattr(obj, attr):
-                        data.append((attr, str(getattr(obj, attr))))
-
-        print("################ DATA: ", data)
-        s.sendall(pickle.dumps(data))
-        action = s.recv(4096)
-        action = pickle.loads(action)
-        if action != 0:
-            pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
-        time.sleep(0.001)
+            s.sendall(pickle.dumps(data))
+            action = s.recv(4096)
+            action = pickle.loads(action)
+            if action != 0:
+                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+            time.sleep(0.001)
 
     s.close()
     return

@@ -93,11 +93,13 @@ class AttributeList:
                     self.add_headers(class_name, rects, y=y)
 
                 y += self.headers_space
-                item_text = class_name + "." + item
-                text_color = GREEN if item_text in selected_items else WHITE
+                if class_name in selected_items:
+                    text_color = GREEN if item in selected_items[class_name] else WHITE
+                else:
+                    text_color = WHITE
                 rect = pygame.Rect(x, y, self.item_w, self.item_h)
                 attribute_label, attribute_rect = keyboard_key(item, text_color, rect)
-                rects.append((rect, class_name + "." + item))
+                rects.append((rect, class_name, item))
                 if self.top_margin <= attribute_rect.y <= SCREEN_H - self.bottom_margin - attribute_rect.height:
                     self.screen.blit(attribute_label, attribute_rect)
                     pygame.gfxdraw.box(self.screen, rect, text_color)
@@ -120,6 +122,7 @@ def attribute_selection(game_classes, selected_attributes):
     global text_rects
     clock = pygame.time.Clock()
     game_attributes = game_classes[0][1]
+    print(game_attributes)
     selected_items = set() if selected_attributes == 0 else selected_attributes
 
     HEADER, HEADER_RECT = header("ATTRIBUTES")
@@ -147,14 +150,19 @@ def attribute_selection(game_classes, selected_attributes):
                     in_range = att_list.top_margin < MENU_MOUSE_POS[1] < att_list.top_margin + att_list.list_window
                     if text_rect[0].collidepoint(MENU_MOUSE_POS) and in_range:
                         if text_rect[1] in selected_items:
-                            selected_items.remove(text_rect[1])
+                            if text_rect[2] in selected_items[text_rect[1]]:
+                                selected_items[text_rect[1]].remove(text_rect[2])
+                                if not selected_items[text_rect[1]]:
+                                    del selected_items[text_rect[1]]
+                            else:
+                                selected_items[text_rect[1]].append(text_rect[2])
+                            if len(selected_items) == 0:
+                                print('{}')
+                            else:
+                                print("Selected Attributes: ", selected_items)
+                                print("Selected Attributes amount: ", len(selected_items))
                         else:
-                            selected_items.add(text_rect[1])
-                        if len(selected_items) == 0:
-                            print('{}')
-                        else:
-                            print("Selected Attributes: ", selected_items)
-                            print("Selected Attributes amount: ", len(selected_items))
+                            selected_items[text_rect[1]] = [text_rect[2]]
 
         BG = pygame.image.load(BACKGROUND_IMAGE)
         SCREEN.blit(BG, (0, 0))
