@@ -48,15 +48,16 @@ class Bird(pygame.sprite.Sprite):
 class Pillar(pygame.sprite.Sprite):
     def __init__(self, x):
         super().__init__()
-        self.gap_height = 200
-        self.top_height = random.randint(50, HEIGHT - self.gap_height - 50)
-        self.bottom_height = HEIGHT - self.top_height - self.gap_height
+        self.gap_space = 200
+        self.top_height = random.randint(50, HEIGHT - self.gap_space - 50)
+        self.bottom_height = HEIGHT - self.top_height - self.gap_space
 
         self.image = pygame.Surface((30, HEIGHT), pygame.SRCALPHA)  # Use an alpha channel for transparency
 
         self.top_rect = pygame.Rect(0, 0, 30, self.top_height)
-        self.bottom_rect = pygame.Rect(0, self.top_height + self.gap_height, 30, self.bottom_height)
-
+        self.bottom_rect = pygame.Rect(0, self.top_height + self.gap_space, 30, self.bottom_height)
+        self.gap_top = self.top_rect.bottom
+        self.gap_bottom = self.bottom_rect.top
         pygame.draw.rect(self.image, BLACK, self.top_rect)
         pygame.draw.rect(self.image, BLACK, self.bottom_rect)
 
@@ -170,6 +171,8 @@ def main():
                     for attr in attributes:
                         if hasattr(obj, attr):
                             data.append((attr, str(getattr(obj, attr))))
+
+            print(data)
 
             s.sendall(pickle.dumps(data))
             action = s.recv(4096)
