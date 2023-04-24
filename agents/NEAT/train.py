@@ -108,7 +108,7 @@ class Trainer:
             pickle.dump(winner, f)
 
     def neat_setup(self):
-        config_path = "C:\\Users\\PC\\Networks\\FinalProject\\agents\\NEAT\\config.txt"
+        config_path = "..\\agents\\NEAT\\config.txt"
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                              neat.DefaultSpeciesSet, neat.DefaultStagnation,
                              config_path)

@@ -86,9 +86,9 @@ class Breakout:
         valid = True
         if decision == 0:  # Don't move
             genome.fitness -= 0.01  # we want to discourage this
-            self.player.move_player(0)
+            self.player.action(0)
         else:  # Move left(1) or right(2)
-            valid = self.player.move_player(decision)
+            valid = self.player.action(decision)
         if not valid:  # If the movement makes the paddle go off the screen punish the AI
             genome.fitness -= 0.05
 
@@ -96,7 +96,7 @@ class Breakout:
         player_x, ball_x, ball_y = self.game.state.get_positions()
         output = net.activate((player_x, abs(self.player.rect.top - ball_y), ball_x))
         decision = output.index(max(output))
-        self.player.move_player(decision)
+        self.player.action(decision)
 
     def calculate_fitness(self, game_score, duration):
         self.genome.fitness += game_score + duration
