@@ -10,7 +10,6 @@ import pygame
 import random
 import sys
 
-
 pygame.init()
 
 # Screen dimensions
@@ -36,8 +35,9 @@ class Bird(pygame.sprite.Sprite):
         self.velocity = 0
         self.score = 0
 
+
     def update(self):
-        self.velocity -= 0.5
+        self.velocity -= 0.4
         self.y -= self.velocity
         self.rect.y -= self.velocity
 
@@ -48,7 +48,7 @@ class Bird(pygame.sprite.Sprite):
 class Pillar(pygame.sprite.Sprite):
     def __init__(self, x):
         super().__init__()
-        self.gap_space = 200
+        self.gap_space = 220
         self.top_height = random.randint(50, HEIGHT - self.gap_space - 50)
         self.bottom_height = HEIGHT - self.top_height - self.gap_space
 
@@ -67,7 +67,7 @@ class Pillar(pygame.sprite.Sprite):
         self.passed = False
 
     def update(self):
-        self.x_pos = -3
+        self.x_pos -= 3
         self.rect.x -= 3
 
 
@@ -82,7 +82,7 @@ def draw_text(screen, text, size, x, y):
 def pillar_collision(bird, pillars):
     for pillar in pillars:
         if bird.rect.colliderect(pillar.top_rect.move(pillar.rect.topleft)) or \
-           bird.rect.colliderect(pillar.bottom_rect.move(pillar.rect.topleft)):
+                bird.rect.colliderect(pillar.bottom_rect.move(pillar.rect.topleft)):
             return True
     return False
 
@@ -98,7 +98,8 @@ def main():
     except ConnectionRefusedError:
         pass
 
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
+
     pygame.display.set_caption("Flappy")
     clock = pygame.time.Clock()
 
@@ -106,7 +107,7 @@ def main():
     all_sprites = pygame.sprite.Group(bird)
     pillars = pygame.sprite.Group()
 
-    active_objects = [bird, Pillar(-30), Pillar(-30), Pillar(-30)]
+    active_objects = [bird, Pillar(-30)]
 
     pillar_spawn_counter = 0
     total_pillars = 0
@@ -124,12 +125,12 @@ def main():
         # Spawn pillars
         pillar_spawn_counter += 1
         if pillar_spawn_counter == spawn_target:
-            total_pillars += 1
             pillar = Pillar(WIDTH)
             all_sprites.add(pillar)
-            active_objects[total_pillars % 3 + 1] = pillar
             pillars.add(pillar)
             pillar_spawn_counter = 0
+            if total_pillars == 0:
+                active_objects[1] = pillar
 
         # Update
         all_sprites.update()
@@ -138,10 +139,12 @@ def main():
         hit_pillar = pillar_collision(bird, pillars)
 
         # Check if the bird passed a pillar
-        for pillar in pillars:
+        for i, pillar in enumerate(pillars):
             if bird.rect.left > pillar.rect.right and not pillar.passed:
                 pillar.passed = True
                 bird.score += 1
+                pillar_list = pillars.sprites()
+                active_objects[1] = pillar_list[i+1]
             if pillar.rect.x < 0 - 30:
                 pillars.remove(pillar)
                 all_sprites.remove(pillar)
@@ -163,16 +166,15 @@ def main():
 
         clock.tick(0)
 
+        # print("Gap bottom: ", active_objects[1].gap_bottom, "\tGap top: ", active_objects[1].gap_top, "\tX pos: ", active_objects[1].x_pos, "\tBird x: ", active_objects[0].x)
         if connected:
             data = []
             for class_name, attributes in instructions.items():
-                obj = next((o for o in active_objects if o.__class__.__name__ == class_name), None)
-                if obj is not None:
-                    for attr in attributes:
-                        if hasattr(obj, attr):
-                            data.append((attr, str(getattr(obj, attr))))
-
-            print(data)
+                for obj in active_objects:
+                    if obj.__class__.__name__ == class_name and obj is not None:
+                        for attr in attributes:
+                            if hasattr(obj, attr):
+                                data.append((attr, str(getattr(obj, attr))))
 
             s.sendall(pickle.dumps(data))
             action = s.recv(4096)

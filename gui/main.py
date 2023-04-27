@@ -30,7 +30,8 @@ def selected_game(game, path):
     game_attributes = attribute_extractor(game_path)
     # selected_attributes = attributes_extractor(game_attributes)
 
-    selected_attributes = {'Bird': ['score', 'x', 'y'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
+    # selected_attributes = {'Bird': ['score', 'x', 'y', 'velocity'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
+    selected_attributes = {'Player': ['rect.center', 'score'], 'Ball': ['rect.x', 'rect.y']}
 
     while True:
         SCREEN = pg.display.set_mode((1280, 720))

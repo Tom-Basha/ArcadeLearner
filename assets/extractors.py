@@ -45,8 +45,16 @@ def attribute_extractor(file_path):
                             if isinstance(subsubnode, ast.Assign):
                                 for target in subsubnode.targets:
                                     if isinstance(target, ast.Attribute):
-                                        class_features[class_name].append(target.attr)
-    # print([(class_name, attrs) for class_name, attrs in class_features.items()])
+                                        value = target.value
+                                        while isinstance(value, ast.Attribute):
+                                            value = value.value
+                                        if isinstance(value, ast.Name) and value.id == "self":
+                                            attr = target.attr
+                                            while isinstance(target.value, ast.Attribute):
+                                                target = target.value
+                                                attr = target.attr + "." + attr
+                                            class_features[class_name].append(attr)
     return [(class_name, attrs) for class_name, attrs in class_features.items()]
+
 
 
