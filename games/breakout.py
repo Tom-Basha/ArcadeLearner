@@ -1,5 +1,9 @@
-import math
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import pickle
+import random
 import socket
 import time
 from random import randrange as rnd
@@ -143,7 +147,7 @@ class Player(BaseObject):
         self.y = 688
         self.width = 120
         self.height = 27
-        self.speed = 6
+        self.speed = 7
         self.speed_x = 0
         self.rect = pygame.Rect((0, 0), (self.width, self.height))
         self.rect.center = (self.x, self.y)
@@ -161,16 +165,6 @@ class Player(BaseObject):
         self.old_rect = self.rect.copy()
 
         self.keystate = pygame.key.get_pressed()
-
-        # Handling player movement
-        if self.keystate[pygame.K_LEFT] and not self.keystate[pygame.K_RIGHT]:
-            self.speed_x = -self.speed
-
-        elif self.keystate[pygame.K_RIGHT] and not self.keystate[pygame.K_LEFT]:
-            self.speed_x = self.speed
-
-        else:
-            self.speed_x = 0
 
         # Current frame (x position)
         self.rect.x += self.speed_x
@@ -200,17 +194,31 @@ class Ball(BaseObject):
         self.speed_y = 0
         self.speed = 5
         self.active = False
-        self.aim = "right"
+        self.aim = random.choice(["left", "right"])
         self.groups = groups
         self.obstacles = obstacles
         self.player = player
+
+        # Sticking the ball to the player pad
+        self.rect.center = self.player.rect.center
+        self.rect.bottom = self.player.rect.top
+
+        # Shooting the ball
+        if self.aim == "left":
+            self.speed_x = -self.speed
+            self.speed_y = -self.speed
+
+        elif self.aim == "right":
+            self.speed_x = self.speed
+            self.speed_y = -self.speed
+
+        self.active = True
 
     def update(self):
         # Previous frame
         self.old_rect = self.rect.copy()
 
         # Current frame (x, y positions)
-
         if self.active:
             self.rect.x += self.speed_x
             self.collision("horizontal")
@@ -222,37 +230,13 @@ class Ball(BaseObject):
             self.collision_window("vertical")
             self.rect.y = round(self.rect.y)
 
-        if not self.active:
-            # Sticking the ball to the player pad
-            self.rect.centerx = self.player.rect.centerx
-            self.rect.bottom = self.player.rect.top
-
-            # Aiming the ball
-            if self.player.keystate[pygame.K_LEFT] and not self.player.keystate[pygame.K_RIGHT]:
-                self.aim = "left"
-
-            if self.player.keystate[pygame.K_RIGHT] and not self.player.keystate[pygame.K_LEFT]:
-                self.aim = "right"
-
-            # Shooting the ball
-            if self.player.keystate[pygame.K_SPACE]:
-
-                if self.aim == "left":
-                    self.speed_x = -self.speed
-                    self.speed_y = -self.speed
-
-                elif self.aim == "right":
-                    self.speed_x = self.speed
-                    self.speed_y = -self.speed
-
-                self.active = True
 
     def reset_ball(self):
         if self.player.lives > 0:
             self.player.lives -= 1
 
             if self.player.lives != 0:
-                self.active = False
+                self.active = True
 
     def draw(self, window):
         pygame.draw.circle(window, (self.color.r, self.color.g, self.color.b), (self.rect.center), self.radius)
@@ -269,7 +253,6 @@ class Ball(BaseObject):
                     if getattr(sprite, 'health', None):
                         damage_block(sprite)
                         self.player.score += 1
-                        self.inc_speed()
 
                     # Collision on the right
                     if self.rect.right >= sprite.rect.left and self.old_rect.right <= sprite.old_rect.left:
@@ -288,7 +271,6 @@ class Ball(BaseObject):
                     if getattr(sprite, 'health', None):
                         damage_block(sprite)
                         self.player.score += 1
-                        self.inc_speed()
 
                     # Collision on the bottom
                     if self.rect.bottom >= sprite.rect.top and self.old_rect.bottom <= sprite.old_rect.top:
@@ -322,14 +304,6 @@ class Ball(BaseObject):
 
             if self.rect.top > HEIGHT:
                 self.reset_ball()
-
-    def inc_speed(self):
-        inc_s = False
-        if self.player.score % 10 == 0 and not inc_s:
-            self.speed += 0.2
-            inc_s = True
-        else:
-            inc_s = False
 
 
 class GamePlay(BaseState):
@@ -373,17 +347,25 @@ class GamePlay(BaseState):
         self.paused_text = self.font.render(f"Paused", True, pygame.Color("White"))
         self.paused_rect = self.paused_text.get_rect(center=self.window_rect.center)
 
-    def get_event(self, event):
-        if event.type == pygame.QUIT:
-            self.quit = True
-
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_ESCAPE:
-                if not self.paused:
-                    self.paused = True
-
+    def get_event(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.quit = True
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    self.player.speed_x = -self.player.speed
+                elif event.key == pygame.K_RIGHT:
+                    self.player.speed_x = self.player.speed
                 else:
-                    self.paused = False
+                    self.player.speed_x = 0
+
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_ESCAPE:
+                    if not self.paused:
+                        self.paused = True
+
+                    else:
+                        self.paused = False
 
     def startup(self, persistent):
         self.persist["score"] = 0
@@ -434,7 +416,6 @@ class GamePlay(BaseState):
             window.blit(self.paused_text, self.paused_rect)
 
     def update(self, dt):
-
         if not self.paused:
 
             # Updating the lives text
@@ -472,13 +453,12 @@ class Game(object):
         self.done = False
         self.window = window
         self.clock = pygame.time.Clock()
-        self.fps = 60
+        self.fps = 0
         self.state_name = "GAMEPLAY"
         self.state = GamePlay()
 
     def event_loop(self):
-        for event in pygame.event.get():
-            self.state.get_event(event)
+        self.state.get_event()
 
     def flip_state(self):
         next_state = self.state.next_state
@@ -505,14 +485,13 @@ class Game(object):
         try:
             s.connect(('localhost', 8888))
             instructions = pickle.loads(s.recv(4096))
-            print(f"Requested attributes: {instructions}")
             connected = True
         except ConnectionRefusedError:
             pass
 
-        active_objects = [self.state.player, self.state.ball]
-
         while not self.done:
+            active_objects = [self.state.player, self.state.ball]
+
             dt = self.clock.tick(self.fps)
             self.event_loop()
             self.update(dt)
@@ -525,10 +504,15 @@ class Game(object):
                     for obj in active_objects:
                         if obj.__class__.__name__ == class_name and obj is not None:
                             for attr in attributes:
-                                if hasattr(obj, attr):
-                                    data.append((attr, str(getattr(obj, attr))))
+                                temp_obj = obj
+                                temp_attr = attr
+                                if "." in attr:
+                                    parts = attr.split(".")
+                                    temp_obj = getattr(obj, str(parts[0]))
+                                    temp_attr = parts[1]
+                                if hasattr(temp_obj, temp_attr):
+                                    data.append((attr, str(getattr(temp_obj, temp_attr))))
 
-                print(data)
                 s.sendall(pickle.dumps(data))
                 action = s.recv(4096)
                 action = pickle.loads(action)
@@ -543,7 +527,7 @@ if __name__ == "__main__":
     # initializing pygame and setting the screen resolution
     pygame.init()
     pygame.mixer.init()
-    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
 
     # Game class instance
     game = Game(window)

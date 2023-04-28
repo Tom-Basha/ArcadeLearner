@@ -1,3 +1,4 @@
+import os
 import pickle
 import socket
 import subprocess
@@ -12,7 +13,7 @@ def set_fitness(genome, score, duration):
 
 
 class Trainer:
-    def __init__(self, game_name, game_path, inputs, outputs, threshold=250, population=50):
+    def __init__(self, game_name, game_path, inputs, outputs, threshold=250, population=10):
         self.population = population
         self.threshold = threshold
         self.game_name = game_name
@@ -41,11 +42,11 @@ class Trainer:
                 data = pickle.loads(data)
                 input_arr = np.array([])
                 for s in data:
-                    value = s
-                    if '[' in s:  # If the string contains an inner list
-                        arr = np.array(eval(value))  # Use the eval() function to convert the string to a list
-                        input_arr = np.concatenate(
-                            (input_arr, arr.flatten()))  # Flatten the inner list and add to the input array
+                    value = s[1]
+                    if '(' in s[1]:
+                        arr = np.array(eval(value))
+                        input_arr = np.concatenate((input_arr, arr.flatten()))
+
                     else:
                         if s[0] == 'score':
                             score = float(s[1])
@@ -96,11 +97,22 @@ class Trainer:
         p = neat.Population(config)
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
+
+        dir_path = "..\\agents\\NEAT\\cps\\" + self.game_name
+        if not os.path.exists(dir_path):
+            try:
+                os.mkdir(dir_path)
+            except OSError as error:
+                print("Directory creation failed: ", error)
+
+        cp_prefix = dir_path + "\\train_checkpoint_"
+        checkpointer = neat.Checkpointer(generation_interval=1, filename_prefix=cp_prefix)
+
         p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(1))
+        p.add_reporter(checkpointer)
 
         winner = p.run(self.genomes_eval, self.population)
-        with open("cps/" + self.game_name + "/best.pickle", "wb") as f:
+        with open(dir_path + "\\best.pickle", "wb") as f:
             pickle.dump(winner, f)
 
     def neat_setup(self):
