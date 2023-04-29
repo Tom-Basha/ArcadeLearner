@@ -192,7 +192,7 @@ class Ball(BaseObject):
         self.old_rect = self.rect.copy()
         self.speed_x = 0
         self.speed_y = 0
-        self.speed = 5
+        self.speed = 4
         self.active = False
         self.aim = random.choice(["left", "right"])
         self.groups = groups

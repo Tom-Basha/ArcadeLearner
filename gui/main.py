@@ -1,5 +1,6 @@
 import key_selection as ks
 from agents.NEAT.train import Trainer
+from agents.NEAT.watch_ai import AI_Player
 from attribute_selection import *
 from assets.extractors import *
 from assets.error import *
@@ -31,7 +32,7 @@ def selected_game(game, path):
     # selected_attributes = attributes_extractor(game_attributes)
 
     # selected_attributes = {'Bird': ['score', 'x', 'y', 'velocity'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
-    selected_attributes = {'Player': ['rect.center', 'score'], 'Ball': ['rect.x', 'rect.y']}
+    selected_attributes = {'Player': ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'rect.center', 'score'], 'Ball': ['rect.center']}
 
     while True:
         SCREEN = pg.display.set_mode((1280, 720))
@@ -56,17 +57,13 @@ def selected_game(game, path):
                     subprocess.run(["python", game_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 
                 if WATCH_BTN.check_input(MENU_MOUSE_POS):
-                    error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
-
-                    # PLACEHOLDER - AI WATCH
+                    ai_player = AI_Player(game, path, selected_attributes, selected_keys)
+                    ai_player.neat_setup()
 
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
                     print(selected_keys)
                     trainer = Trainer(game, path, selected_attributes, selected_keys)
                     trainer.neat_setup()
-                    error_msg("PAGE NOT FOUND: WORK IN PROGRESS")
-
-                    # PLACEHOLDER - AI train
 
                 if CONTROLS_BTN.check_input(MENU_MOUSE_POS):
                     selected_keys = ks.key_selection(selected_keys)

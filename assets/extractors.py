@@ -14,7 +14,7 @@ def games_extractor():
             file_name_without_ext = os.path.splitext(game)[0]
             file_name = file_name_without_ext.replace("_", " ").title()
             games_list.append((file_name, file_path))
-    print(games_list)
+    print("Detected Keys:", games_list)
     return games_list
 
 
