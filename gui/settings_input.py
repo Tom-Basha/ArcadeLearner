@@ -13,7 +13,7 @@ FONT = pg.font.Font(None, 32)
 
 class InputBox:
 
-    def __init__(self, x, y, w, h, text='', pop_size=0, fitness_threshold=0, hidden_layers=0):
+    def __init__(self, x, y, w, h, text='', pop_size=30, fitness_threshold=100, hidden_layers=1):
         self.rect = pg.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
         self.text = text
@@ -39,6 +39,7 @@ class InputBox:
                 self.active = False
             # Change the current color of the input box.
             self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
+
         elif event.type == pg.KEYDOWN:
             if self.active:
                 if event.key == pg.K_RETURN:
@@ -49,27 +50,28 @@ class InputBox:
                         if self.text.isdigit():
                             num = int(self.text)
                             if num < self.MIN_POP_SIZE:
-                                self.text = str(self.MIN_POP_SIZE)
+                                num = self.MIN_POP_SIZE
                             elif num > self.MAX_POP_SIZE:
-                                self.text = str(self.MAX_POP_SIZE)
+                                num = self.MAX_POP_SIZE
                             self.pop_size = num
                             print("pop_size: ", self.pop_size)
+                            self.text = str(num)  # update text to display minimum value
                     elif self.rect.y == 300:  # Input box for fitness_threshold
                         if self.text.isdigit():
                             num = int(self.text)
                             if num < self.MIN_FITNESS_THRESHOLD:
-                                self.text = str(self.MIN_FITNESS_THRESHOLD)
+                                num = self.MIN_FITNESS_THRESHOLD
                             elif num > self.MAX_FITNESS_THRESHOLD:
-                                self.text = str(self.MAX_FITNESS_THRESHOLD)
+                                num = self.MAX_FITNESS_THRESHOLD
                             self.fitness_threshold = num
                             print("fitness_threshold: ", self.fitness_threshold)
                     elif self.rect.y == 400:  # Input box for hidden_layers
                         if self.text.isdigit():
                             num = int(self.text)
                             if num < self.MIN_HIDDEN_LAYERS:
-                                self.text = str(self.MIN_HIDDEN_LAYERS)
+                                num = self.MIN_HIDDEN_LAYERS
                             elif num > self.MAX_HIDDEN_LAYERS:
-                                self.text = str(self.MAX_HIDDEN_LAYERS)
+                                num = self.MAX_HIDDEN_LAYERS
                             self.hidden_layers = num
                             print("hidden_layers: ", self.hidden_layers)
                     self.text = ''
@@ -123,6 +125,29 @@ class InputBox:
         width = max(200, self.txt_surface.get_width() + 10)
         self.rect.w = width
 
+        # Check if the input box is active
+        if self.active:
+            # If the text field is empty, set the text to the minimum value
+            if self.text == '':
+                if self.rect.y == 200:  # Input box for pop_size
+                    self.text = str(self.MIN_POP_SIZE)
+                elif self.rect.y == 300:  # Input box for fitness_threshold
+                    self.text = str(self.MIN_FITNESS_THRESHOLD)
+                elif self.rect.y == 400:  # Input box for hidden_layers
+                    self.text = str(self.MIN_HIDDEN_LAYERS)
+            else:
+                # Convert the text to a number and check if it's greater than the maximum value
+                num = int(self.text)
+                if self.rect.y == 200 and num > self.MAX_POP_SIZE:  # Input box for pop_size
+                    num = self.MAX_POP_SIZE
+                elif self.rect.y == 300 and num > self.MAX_FITNESS_THRESHOLD:  # Input box for fitness_threshold
+                    num = self.MAX_FITNESS_THRESHOLD
+                elif self.rect.y == 400 and num > self.MAX_HIDDEN_LAYERS:  # Input box for hidden_layers
+                    num = self.MAX_HIDDEN_LAYERS
+                self.text = str(num)
+
+            self.txt_surface = FONT.render(self.text, True, self.color)
+
     def draw(self, screen):
         # Blit the text.
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -145,7 +170,6 @@ def main():
     input_box2 = InputBox(400, 300, 140, 32)
     input_box3 = InputBox(400, 400, 140, 32)
     input_boxes = [input_box1, input_box2, input_box3]
-    done = False
 
     while True:
         for event in pg.event.get():
