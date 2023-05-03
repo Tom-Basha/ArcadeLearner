@@ -1,208 +1,137 @@
+import pygame
 import sys
 from assets.button import *
 from assets.utils import *
 from assets.paths import *
 
-pg.init()
-screen = pg.display.set_mode((SCREEN_W, SCREEN_H))
-pg.display.set_caption("Settings")
-COLOR_INACTIVE = pg.Color(WHITE)
-COLOR_ACTIVE = pg.Color(GREEN)
-FONT = pg.font.Font(None, 32)
+# Initialize Pygame
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+pygame.display.set_caption("Settings")
+font = pygame.font.Font(None, 24)
 
 
-class InputBox:
-
-    def __init__(self, x, y, w, h, text='', pop_size=30, fitness_threshold=100, hidden_layers=1):
-        self.rect = pg.Rect(x, y, w, h)
-        self.color = COLOR_INACTIVE
-        self.text = text
-        self.txt_surface = FONT.render(text, True, self.color)
-        self.active = False
+# Slider class
+class Slider:
+    def __init__(self, x, y, width, height, min_val, max_val, jump, curr_value=-1, pop_size=50, fitness_threshold=250,
+                 hidden_layers=4):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.min_val = min_val
+        self.max_val = max_val
         self.pop_size = pop_size  # initial value for population
         self.fitness_threshold = fitness_threshold  # initial value for threshold
         self.hidden_layers = hidden_layers  # initial value for threshold
-        self.MIN_POP_SIZE = 30
-        self.MAX_POP_SIZE = 100
-        self.MIN_FITNESS_THRESHOLD = 100
-        self.MAX_FITNESS_THRESHOLD = 1000
-        self.MIN_HIDDEN_LAYERS = 1
-        self.MAX_HIDDEN_LAYERS = 5
+        self.slider_pos = x
+        self.slider_width = 20
+        self.slider_height = 20
+        self.value = curr_value if curr_value != -1 else min_val
+        self.jump = jump
+        self.dragging = False
 
-    def handle_event(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
-            # If the user clicked on the input_box rect.
-            if self.rect.collidepoint(event.pos):
-                # Toggle the active variable.
-                self.active = not self.active
-            else:
-                self.active = False
-            # Change the current color of the input box.
-            self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
-
-        elif event.type == pg.KEYDOWN:
-            if self.active:
-                if event.key == pg.K_RETURN:
-                    # Update the corresponding value based on the text in the input box
-                    if self.rect.y == 200:  # Input box for pop_size
-                        # Check if input is within the number range
-                        # Check if input is a digit
-                        if self.text.isdigit():
-                            num = int(self.text)
-                            if num < self.MIN_POP_SIZE:
-                                num = self.MIN_POP_SIZE
-                            elif num > self.MAX_POP_SIZE:
-                                num = self.MAX_POP_SIZE
-                            self.pop_size = num
-                            print("pop_size: ", self.pop_size)
-                            self.text = str(num)  # update text to display minimum value
-                    elif self.rect.y == 300:  # Input box for fitness_threshold
-                        if self.text.isdigit():
-                            num = int(self.text)
-                            if num < self.MIN_FITNESS_THRESHOLD:
-                                num = self.MIN_FITNESS_THRESHOLD
-                            elif num > self.MAX_FITNESS_THRESHOLD:
-                                num = self.MAX_FITNESS_THRESHOLD
-                            self.fitness_threshold = num
-                            print("fitness_threshold: ", self.fitness_threshold)
-                    elif self.rect.y == 400:  # Input box for hidden_layers
-                        if self.text.isdigit():
-                            num = int(self.text)
-                            if num < self.MIN_HIDDEN_LAYERS:
-                                num = self.MIN_HIDDEN_LAYERS
-                            elif num > self.MAX_HIDDEN_LAYERS:
-                                num = self.MAX_HIDDEN_LAYERS
-                            self.hidden_layers = num
-                            print("hidden_layers: ", self.hidden_layers)
-                    self.text = ''
-                elif event.key == pg.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                elif event.key == pg.K_UP:
-                    if self.rect.y == 200:  # Input box for pop_size
-                        num = int(self.text)
-                        if num < self.MAX_POP_SIZE:
-                            num += 5
-                        self.pop_size = num
-                        self.text = str(num)
-                    elif self.rect.y == 300:  # Input box for fitness_threshold
-                        num = int(self.text)
-                        if num < self.MAX_FITNESS_THRESHOLD:
-                            num += 50
-                        self.fitness_threshold = num
-                        self.text = str(num)
-                    elif self.rect.y == 400:  # Input box for hidden_layers
-                        num = int(self.text)
-                        if num < self.MAX_HIDDEN_LAYERS:
-                            num += 1
-                        self.hidden_layers = num
-                        self.text = str(num)
-                elif event.key == pg.K_DOWN:
-                    if self.rect.y == 200:  # Input box for pop_size
-                        num = int(self.text)
-                        if num > self.MIN_POP_SIZE:
-                            num -= 5
-                        self.pop_size = num
-                        self.text = str(num)
-                    elif self.rect.y == 300:  # Input box for fitness_threshold
-                        num = int(self.text)
-                        if num > self.MIN_FITNESS_THRESHOLD:
-                            num -= 50
-                        self.fitness_threshold = num
-                        self.text = str(num)
-                    elif self.rect.y == 400:  # Input box for hidden_layers
-                        num = int(self.text)
-                        if num > self.MIN_HIDDEN_LAYERS:
-                            num -= 1
-                        self.hidden_layers = num
-                        self.text = str(num)
-                else:
-                    self.text += event.unicode
-                    # Re-render the text.
-                self.txt_surface = FONT.render(self.text, True, self.color)
-
-    def update(self):
-        # Resize the box if the text is too long.
-        width = max(200, self.txt_surface.get_width() + 10)
-        self.rect.w = width
-
-        # Check if the input box is active
-        if self.active:
-            # If the text field is empty, set the text to the minimum value
-            if self.text == '':
-                if self.rect.y == 200:  # Input box for pop_size
-                    self.text = str(self.MIN_POP_SIZE)
-                elif self.rect.y == 300:  # Input box for fitness_threshold
-                    self.text = str(self.MIN_FITNESS_THRESHOLD)
-                elif self.rect.y == 400:  # Input box for hidden_layers
-                    self.text = str(self.MIN_HIDDEN_LAYERS)
-            else:
-                # Convert the text to a number and check if it's greater than the maximum value
-                num = int(self.text)
-                if self.rect.y == 200 and num > self.MAX_POP_SIZE:  # Input box for pop_size
-                    num = self.MAX_POP_SIZE
-                elif self.rect.y == 300 and num > self.MAX_FITNESS_THRESHOLD:  # Input box for fitness_threshold
-                    num = self.MAX_FITNESS_THRESHOLD
-                elif self.rect.y == 400 and num > self.MAX_HIDDEN_LAYERS:  # Input box for hidden_layers
-                    num = self.MAX_HIDDEN_LAYERS
-                self.text = str(num)
-
-            self.txt_surface = FONT.render(self.text, True, self.color)
+        # Set the initial position of the slider based on the current value
+        if curr_value != -1:
+            self.slider_pos = max(self.x, min(self.x + (self.width - self.slider_width) * self.value / self.max_val,
+                                              self.x + self.width - self.slider_width))
 
     def draw(self, screen):
-        # Blit the text.
-        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        # Blit the rect.
-        pg.draw.rect(screen, self.color, self.rect, 2)
+        # Draw the slider bar
+        pygame.draw.rect(screen, (200, 200, 200), (self.x, self.y, self.width, self.height), border_radius=10)
+        pygame.draw.rect(screen, GREEN, (self.slider_pos, self.y - 5, self.slider_width, self.slider_height),
+                         border_radius=15)
+
+        # Draw the marks
+        mark_step = max(self.jump, (self.max_val - self.min_val) // 10)
+        offset = 10
+        intervals = (self.max_val - self.min_val) // self.jump
+        show_every_other = intervals > 10
+
+        for i in range(intervals + 1):
+            if show_every_other and i % 2 != 0:
+                continue
+            value = self.min_val + i * self.jump
+            mark_text = font.render(str(value), True, WHITE)
+            mark_rect = mark_text.get_rect(
+                center=(self.x + offset + i * (self.width - 2 * offset) // intervals, self.y - 20))
+            screen.blit(mark_text, mark_rect)
+
+        # Draw the value text
+        value_text = font.render(f"Value: {self.value}", True, WHITE)
+        text_rect = value_text.get_rect(center=(self.x + self.width // 2, self.y + 50))
+        screen.blit(value_text, text_rect)
 
         # Draw values on screen
-        font = pg.font.Font(None, 36)
-        pop_text = font.render("pop_size: ", True, (255, 255, 255))
-        thresh_text = font.render("fitness_threshold: ", True, (255, 255, 255))
-        hid_text = font.render("hidden_layers: ", True, (255, 255, 255))
+        pop_text = font.render("Choose the population size: ", True, (255, 255, 255))
+        thresh_text = font.render("Choose the fitness threshold: ", True, (255, 255, 255))
+        hid_text = font.render("Choose the hidden layers: ", True, (255, 255, 255))
         screen.blit(pop_text, (50, 200))
-        screen.blit(thresh_text, (50, 300))
-        screen.blit(hid_text, (50, 400))
+        screen.blit(thresh_text, (50, 350))
+        screen.blit(hid_text, (50, 500))
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if self.is_mouse_on_slider(event.pos):
+                    self.dragging = True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                self.dragging = False
+        elif event.type == pygame.MOUSEMOTION and self.dragging:
+            self.update_slider_pos(event.pos)
+
+    def is_mouse_on_slider(self, pos):
+        return self.slider_pos <= pos[0] <= self.slider_pos + self.slider_width and self.y <= pos[
+            1] <= self.y + self.height
+
+    def update_slider_pos(self, pos):
+        self.slider_pos = max(self.x, min(pos[0] - self.slider_width // 2, self.x + self.width - self.slider_width))
+        self.value = round(
+            (self.slider_pos - self.x) * (self.max_val - self.min_val) / (
+                    self.width - self.slider_width) / self.jump) * self.jump
+        self.value = max(self.min_val, min(self.value + self.min_val, self.max_val))
+        if self == slider:
+            self.pop_size = self.value
+        if self == slider1:
+            self.fitness_threshold = self.value
+        if self == slider2:
+            self.hidden_layers = self.value
 
 
-def main():
-    clock = pg.time.Clock()
-    input_box1 = InputBox(400, 200, 140, 32)
-    input_box2 = InputBox(400, 300, 140, 32)
-    input_box3 = InputBox(400, 400, 140, 32)
-    input_boxes = [input_box1, input_box2, input_box3]
+# Create a slider
+slider = Slider(430, 200, 400, 10, 30, 100, 5, 50)
+slider1 = Slider(430, 350, 400, 10, 100, 1000, 50, 250)
+slider2 = Slider(430, 500, 400, 10, 1, 5, 1, 4)
 
-    while True:
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
-            for box in input_boxes:
-                box.handle_event(event)
+# Main loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        slider.handle_event(event)
+        slider1.handle_event(event)
+        slider2.handle_event(event)
 
-        for box in input_boxes:
-            box.update()
+    MENU_MOUSE_POS = pg.mouse.get_pos()
 
-        MENU_MOUSE_POS = pg.mouse.get_pos()
+    BACK_BTN = back_btn()
+    BACK_BTN.change_color(MENU_MOUSE_POS)
 
-        BACK_BTN = back_btn()
-        BACK_BTN.change_color(MENU_MOUSE_POS)
+    BG = pygame.image.load(BACKGROUND_IMAGE)
+    screen.blit(BG, (0, 0))
 
-        BG = pg.image.load(BACKGROUND_IMAGE)
-        screen.blit(BG, (0, 0))
+    BACK_BTN.update(screen)
+    HEADER, HEADER_RECT = header("SETTINGS")
+    SUBHEAD, SUBHEAD_RECT = subhead("SELECT THE RELEVANT VALUES FOR THE AI LEARNING PROCESS", 16)
+    screen.blit(HEADER, HEADER_RECT)
+    screen.blit(SUBHEAD, SUBHEAD_RECT)
 
-        BACK_BTN.update(screen)
-        HEADER, HEADER_RECT = header("SETTINGS")
-        SUBHEAD, SUBHEAD_RECT = subhead("SELECT THE RELEVANT ATTRIBUTES FOR THE AI LEARNING PROCESS", 16)
-        screen.blit(HEADER, HEADER_RECT)
-        screen.blit(SUBHEAD, SUBHEAD_RECT)
+    slider.draw(screen)
+    slider1.draw(screen)
+    slider2.draw(screen)
+    pygame.display.flip()
 
-        for box in input_boxes:
-            box.draw(screen)
-
-        pg.display.flip()
-        clock.tick(30)
-
-
-if __name__ == '__main__':
-    main()
-    pg.quit()
+pygame.quit()
+sys.exit()
