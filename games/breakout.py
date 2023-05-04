@@ -361,11 +361,7 @@ class GamePlay(BaseState):
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
-                    if not self.paused:
-                        self.paused = True
-
-                    else:
-                        self.paused = False
+                    self.quit = True
 
     def startup(self, persistent):
         self.persist["score"] = 0
@@ -515,9 +511,12 @@ class Game(object):
 
                 s.sendall(pickle.dumps(data))
                 action = s.recv(4096)
-                action = pickle.loads(action)
-                if action != 0:
-                    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+                if action:
+                    action = pickle.loads(action)
+                    if action != 0:
+                        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+                else:
+                    break
                 time.sleep(0.001)
 
         s.close()

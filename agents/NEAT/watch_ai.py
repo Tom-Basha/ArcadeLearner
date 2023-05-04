@@ -1,3 +1,4 @@
+import os
 import pickle
 import subprocess
 import socket
@@ -10,7 +11,7 @@ import pygame
 class AI_Player:
     def __init__(self, game_name, game_path, inputs, outputs):
         self.config_path = "..\\agents\\NEAT\\cps\\" + game_name + "\\config.txt"
-        self.player = "..\\agents\\NEAT\\cps\\" + game_name + "\\trained_ai"
+        self.player = "..\\agents\\NEAT\\cps\\" + game_name + "\\trained_ai.pickle"
         self.game_name = game_name
         self.game_path = game_path
         self.inputs = inputs
@@ -18,21 +19,23 @@ class AI_Player:
         self.socket = None
 
     def neat_setup(self):
-        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                             neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                             self.config_path)
+        if os.path.exists(self.player):
+            config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                                 neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                                 self.config_path)
 
-        with open(self.player, "rb") as f:
-            winner = pickle.load(f)
-        winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
+            with open(self.player, "rb") as f:
+                winner = pickle.load(f)
+            winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
 
-        self.play(winner_net)
-        return
+            self.play(winner_net)
+        else:
+            return False
+        return True
 
     def play(self, winner_net):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('localhost', 8888))
-        # Listen for incoming connections
         self.socket.listen()
 
         print(f"Requested attributes: {self.inputs}")
@@ -64,6 +67,7 @@ class AI_Player:
                 client_socket.sendall(pickle.dumps(move))
 
             else:
+                self.socket.close()
                 break
 
     def action(self, net, values):

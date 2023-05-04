@@ -1,25 +1,28 @@
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import key_selection as ks
 from agents.NEAT.train import Trainer
 from agents.NEAT.watch_ai import AI_Player
 from attribute_selection import *
 from assets.extractors import *
 from assets.error import *
-from testings.attribute_value import *
 
 pg.init()
 
-SCREEN = pg.display.set_mode((1280, 720))
+SCREEN = pg.display.set_mode((SCREEN_W, SCREEN_H))
 pg.display.set_caption("Menu")
 
 BACKGROUND = pg.image.load(paths.BACKGROUND_IMAGE)
 selected_keys = {}
+selected_attributes = {}
 
 
 def selected_game(game, path):
     global selected_keys, selected_attributes
     game_path = path
     selected_keys = keys_extractor(game_path)
-    selected_attributes = {}
 
     PLAY_BTN = manu_btn("Play", (270, 280))
     WATCH_BTN = manu_btn("Watch AI", (640, 280))
@@ -31,11 +34,10 @@ def selected_game(game, path):
     game_attributes = attribute_extractor(game_path)
     # selected_attributes = attributes_extractor(game_attributes)
 
-    # selected_attributes = {'Bird': ['score', 'x', 'y', 'velocity'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
-    selected_attributes = {'Player': ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'rect.center', 'score'], 'Ball': ['rect.center']}
+    selected_attributes = {'Bird': ['rect.center'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
+    # selected_attributes = {'Player': ['rect.center'], 'Ball': ['rect.center']}
 
     while True:
-        SCREEN = pg.display.set_mode((1280, 720))
         pg.display.set_caption(game)
         SCREEN.blit(BACKGROUND, (0, 0))
 
@@ -58,17 +60,19 @@ def selected_game(game, path):
 
                 if WATCH_BTN.check_input(MENU_MOUSE_POS):
                     ai_player = AI_Player(game, path, selected_attributes, selected_keys)
-                    ai_player.neat_setup()
-
+                    trained = ai_player.neat_setup()
+                    if not trained:
+                        error_msg(['Trained AI was not found.', 'Make sure to train your AI first.'])
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
-                    print(selected_keys)
+                    print("\nSetting up training for %s.\nSelected keys: %s\nSelected attributes: %s" % (
+                        game, selected_keys, selected_attributes))
+
                     trainer = Trainer(game, path, selected_attributes, selected_keys)
                     trainer.neat_setup()
 
                 if CONTROLS_BTN.check_input(MENU_MOUSE_POS):
                     selected_keys = ks.key_selection(selected_keys)
                 if ATTRIBUTES_BTN.check_input(MENU_MOUSE_POS):
-
                     # PLACEHOLDER - function that automatically select attributes
 
                     selected_attributes = attribute_selection(game_attributes, selected_attributes)

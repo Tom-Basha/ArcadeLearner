@@ -14,7 +14,6 @@ def games_extractor():
             file_name_without_ext = os.path.splitext(game)[0]
             file_name = file_name_without_ext.replace("_", " ").title()
             games_list.append((file_name, file_path))
-    print("Detected Keys:", games_list)
     return games_list
 
 
@@ -53,7 +52,8 @@ def attribute_extractor(file_path):
                                             while isinstance(target.value, ast.Attribute):
                                                 target = target.value
                                                 attr = target.attr + "." + attr
-                                            class_features[class_name].append(attr)
+                                            if attr not in ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'score']:
+                                                class_features[class_name].append(attr)
     return [(class_name, attrs) for class_name, attrs in class_features.items()]
 
 

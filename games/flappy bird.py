@@ -22,16 +22,18 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
+fps = 60
+
 
 class Bird(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((20, 20))
-        self.image.fill(GREEN)
-        self.rect = self.image.get_rect()
+        self.rect = pygame.Rect((0, 0), (20, 20))
         self.x = WIDTH // 2
         self.y = HEIGHT // 2
         self.rect.center = (self.x, self.y)
+        self.image = pygame.Surface((self.rect.width, self.rect.height))
+        self.image.fill("green")
         self.velocity = 0
         self.score = 0
 
@@ -88,6 +90,7 @@ def pillar_collision(bird, pillars):
 
 
 def main():
+    global fps
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connected = False
     try:
@@ -95,6 +98,7 @@ def main():
         instructions = pickle.loads(s.recv(4096))
         # print(f"Requested attributes: {instructions}")
         connected = True
+        fps = 0
     except ConnectionRefusedError:
         pass
 
@@ -111,7 +115,7 @@ def main():
 
     pillar_spawn_counter = 0
     total_pillars = 0
-    spawn_target = 350 // 3  # Dividing by the pillar speed (3) to get the required number of frames
+    spawn_target = 420 // 3  # Dividing by the pillar speed (3) to get the required number of frames
 
     while True:
         for event in pygame.event.get():
@@ -164,7 +168,7 @@ def main():
             pygame.time.delay(300)
             break
 
-        clock.tick(0)
+        clock.tick(fps)
 
         # print("Gap bottom: ", active_objects[1].gap_bottom, "\tGap top: ", active_objects[1].gap_top, "\tX pos: ", active_objects[1].x_pos, "\tBird x: ", active_objects[0].x)
         if connected:
@@ -173,19 +177,31 @@ def main():
                 for obj in active_objects:
                     if obj.__class__.__name__ == class_name and obj is not None:
                         for attr in attributes:
-                            if hasattr(obj, attr):
-                                data.append((attr, str(getattr(obj, attr))))
+                            temp_obj = obj
+                            temp_attr = attr
+                            if "." in attr:
+                                parts = attr.split(".")
+                                temp_obj = getattr(obj, str(parts[0]))
+                                temp_attr = parts[1]
+                            if hasattr(temp_obj, temp_attr):
+                                data.append((attr, str(getattr(temp_obj, temp_attr))))
 
             s.sendall(pickle.dumps(data))
             action = s.recv(4096)
-            action = pickle.loads(action)
-            if action != 0:
-                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+            if action:
+                action = pickle.loads(action)
+                if action != 0:
+                    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+            else:
+                break
             time.sleep(0.001)
 
     s.close()
-    return
 
 
 if __name__ == "__main__":
     main()
+
+    # Closing the game
+    pygame.quit()
+    sys.exit()
