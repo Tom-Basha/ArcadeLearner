@@ -1,5 +1,7 @@
 import json
 
+import re
+
 
 def find_matching_attributes(attr_list, json_file):
     # Load the JSON file into a dictionary
@@ -16,9 +18,11 @@ def find_matching_attributes(attr_list, json_file):
     for obj_type, obj_attrs in attr_list.items():
         # Iterate through the attributes in the object type
         for attr in obj_attrs:
+            # Create a regular expression that matches the entire word
+            pattern = re.compile(r"\b" + re.escape(attr) + r"\b")
+
             # Check if the attribute is in the "features" array or overlaps with part of a feature
-            if any([overlap in features for overlap in attr.split()]) or any(
-                    [overlap in feature for feature in features for overlap in attr.split('_')]):
+            if any(pattern.search(feature) for feature in features):
                 matching_attributes.append(f"{obj_type}_{attr}")
 
     return matching_attributes
