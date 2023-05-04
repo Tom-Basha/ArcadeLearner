@@ -1,7 +1,5 @@
 import json
 
-import re
-
 
 def find_matching_attributes(attr_list, json_file):
     # Load the JSON file into a dictionary
@@ -11,26 +9,31 @@ def find_matching_attributes(attr_list, json_file):
     # Get the "features" array from the JSON data
     features = json_data["features"]
 
-    # Create an empty list to store matching attributes
-    matching_attributes = []
+    # Create an empty dictionary to store objects and their attributes
+    objects = {}
 
     # Iterate through the attributes in the first list
     for obj_type, obj_attrs in attr_list.items():
+        # Create an empty array to store the attributes of the current object type
+        obj_attr_list = []
+
         # Iterate through the attributes in the object type
         for attr in obj_attrs:
-            # Create a regular expression that matches the entire word
-            pattern = re.compile(r"\b" + re.escape(attr) + r"\b")
+            # Check if the attribute matches a feature string or is a part of a feature string
+            if any(feature == attr or f" {attr} " in feature for feature in features):
+                # Append the matching attribute to the object attribute list
+                obj_attr_list.append(attr)
 
-            # Check if the attribute is in the "features" array or overlaps with part of a feature
-            if any(pattern.search(feature) for feature in features):
-                matching_attributes.append(f"{obj_type}_{attr}")
+        # If the object type has at least one matching attribute, add it to the dictionary
+        if obj_attr_list:
+            objects[obj_type] = obj_attr_list
 
-    return matching_attributes
+    return objects
 
 
 attr_list = {'Bird': ['score', 'center'], 'Pillar': ['gap_height', 'x']}
 json_file = 'attributes.json'
 
-matching_attributes = find_matching_attributes(attr_list, json_file)
+objects = find_matching_attributes(attr_list, json_file)
 
-print(matching_attributes)
+print(objects)
