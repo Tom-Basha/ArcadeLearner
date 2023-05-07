@@ -1,187 +1,208 @@
-import os
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
-
 import pickle
 import socket
 import time
 
 import pygame
-import random
 import sys
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 640, 480
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
+
+# Colors
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+DARK_GREEN = (0, 120, 0)
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+
+fps = 20
 
 
-class GameSnake:
+class Food:
+    def __init__(self, snake):
+        self.size = snake.size
+        self.position = self.spawn(snake)
+        self.rect = pygame.Rect(self.position[0], self.position[1], self.size, self.size)
+
+    def spawn(self, snake):
+        while True:
+            food_pos = (
+                random.randrange(0, WIDTH - self.size, self.size), random.randrange(0, HEIGHT - self.size, self.size))
+            if food_pos not in snake.positions:
+                return food_pos
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, RED, (self.position[0] + self.size // 2, self.position[1] + self.size // 2),
+                           self.size // 2)
+
+    def respawn(self, snake):
+        self.position = self.spawn(snake)
+        self.rect.topleft = self.position
+
+
+# Snake object
+class Snake:
     def __init__(self):
-        self.difficulty = 30
-
-        self.frame_size_x = 720
-        self.frame_size_y = 480
-
-        # Checks for errors encountered
-        check_errors = pygame.init()
-        if check_errors[1] > 0:
-            print(f'[!] Had {check_errors[1]} errors when initialising game, exiting...')
-            sys.exit(-1)
-
-        # Initialise game window
-        pygame.display.set_caption('Snake')
-        self.game_window = pygame.display.set_mode((self.frame_size_x, self.frame_size_y))
-
-        # Colors (R, G, B)
-        self.black = pygame.Color(0, 0, 0)
-        self.white = pygame.Color(255, 255, 255)
-        self.red = pygame.Color(255, 0, 0)
-        self.green = pygame.Color(0, 255, 0)
-        self.blue = pygame.Color(0, 0, 255)
-
-        # FPS (frames per second) controller
-        self.fps_controller = pygame.time.Clock()
-
-        # Game variables
-        self.snake_pos = [100, 50]
-        self.possible_move = [0, 1, 1, 1]   # left, up, right, down
-        self.snake_body = [[100, 50], [100 - 10, 50], [100 - (2 * 10), 50]]
-        self.lives = 1
-        self.food_pos = [random.randrange(1, (self.frame_size_x // 10)) * 10,
-                         random.randrange(1, (self.frame_size_y // 10)) * 10]
-        self.food_spawn = True
-
+        self.size = 20
+        self.positions = [(WIDTH // 2, HEIGHT // 2), (WIDTH // 2, HEIGHT // 2 + self.size),
+                          (WIDTH // 2, HEIGHT // 2 + 2 * self.size)]
+        self.direction = (0, -self.size)
+        self.next_direction = self.direction
+        self.rect = pygame.Rect(self.positions[0][0], self.positions[0][1], self.size, self.size)
         self.score = 0
-        self.direction = 2
-        self.change_to = self.direction
+        self.options = [0, 0, 0, 0]  # left, up, right, down
 
-    # Score
-    def show_score(self, choice, color, font, size):
-        score_font = pygame.font.SysFont(font, size)
-        score_surface = score_font.render('Score : ' + str(self.score), True, color)
-        score_rect = score_surface.get_rect()
-        if choice == 1:
-            score_rect.midtop = (self.frame_size_x / 10, 15)
-        else:
-            score_rect.midtop = (self.frame_size_x / 2, self.frame_size_y / 1.25)
-        self.game_window.blit(score_surface, score_rect)
-        # pygame.display.flip()
+    def update_options(self):
+        left_pos = (self.positions[0][0] - self.size, self.positions[0][1])
+        up_pos = (self.positions[0][0], self.positions[0][1] - self.size)
+        right_pos = (self.positions[0][0] + self.size, self.positions[0][1])
+        down_pos = (self.positions[0][0], self.positions[0][1] + self.size)
 
-    # Main game loop
+        self.options = [
+            1 if left_pos not in self.positions and 0 <= left_pos[0] < WIDTH else -1,
+            1 if up_pos not in self.positions and 0 <= up_pos[1] < HEIGHT else -1,
+            1 if right_pos not in self.positions and 0 <= right_pos[0] < WIDTH else -1,
+            1 if down_pos not in self.positions and 0 <= down_pos[1] < HEIGHT else -1,
+        ]
+
+        if self.direction == (0, -self.size):  # going up
+            self.options[3] = 0
+        elif self.direction == (0, self.size):  # going down
+            self.options[1] = 0
+        elif self.direction == (-self.size, 0):  # going left
+            self.options[2] = 0
+        elif self.direction == (self.size, 0):  # going right
+            self.options[0] = 0
+
+    def move(self):
+        self.direction = self.next_direction
+        new_pos = (self.positions[0][0] + self.direction[0], self.positions[0][1] + self.direction[1])
+        self.positions.insert(0, new_pos)
+        self.positions.pop()
+        self.rect.topleft = new_pos
+
+    def grow(self):
+        self.positions.append(self.positions[-1])
+        self.score += 1
+
+    def draw(self, screen):
+        for i, pos in enumerate(self.positions):
+            if i == 0:
+                color = GREEN
+            else:
+                color = DARK_GREEN
+            pygame.draw.rect(screen, color, (pos[0] + 1, pos[1] + 1, self.size - 2, self.size - 2))
+
+    def check_collision(self, pos):
+        if pos in self.positions[1:]:
+            return True
+        return False
 
 
-def run():
+def spawn_food(snake):
+    while True:
+        food_pos = (
+            random.randrange(0, WIDTH - snake.size, snake.size), random.randrange(0, HEIGHT - snake.size, snake.size))
+        if food_pos not in snake.positions:
+            return food_pos
+
+
+def draw_score(screen, score):
+    font = pygame.font.Font(None, 36)
+    text = font.render(f"Score: {score}", 1, WHITE)
+    screen.blit(text, (10, 10))
+
+
+def main():
+    global fps
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connected = False
     try:
         s.connect(('localhost', 8888))
         instructions = pickle.loads(s.recv(4096))
-        print(f"Requested attributes: {instructions}")
         connected = True
+        fps = 0
     except ConnectionRefusedError:
         pass
 
-    snake = GameSnake()
-    active_obj = [snake]
+    snake = Snake()
+    food = Food(snake)
 
+    active_objects = [snake, food]
+
+    clock = pygame.time.Clock()
     while True:
-
-        # Handling key events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                break
+                pygame.quit()
+                sys.exit()
+
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    snake.change_to = 0
-                if event.key == pygame.K_DOWN:
-                    snake.change_to = 1
-                if event.key == pygame.K_LEFT:
-                    snake.change_to = 3
-                if event.key == pygame.K_RIGHT:
-                    snake.change_to = 2
-                # Esc -> Create event to quit the game
-                if event.key == pygame.K_ESCAPE:
-                    pygame.event.post(pygame.event.Event(pygame.QUIT))
+                if event.key == pygame.K_UP and snake.direction != (0, snake.size):
+                    snake.next_direction = (0, -snake.size)
+                elif event.key == pygame.K_DOWN and snake.direction != (0, -snake.size):
+                    snake.next_direction = (0, snake.size)
+                elif event.key == pygame.K_LEFT and snake.direction != (snake.size, 0):
+                    snake.next_direction = (-snake.size, 0)
+                elif event.key == pygame.K_RIGHT and snake.direction != (-snake.size, 0):
+                    snake.next_direction = (snake.size, 0)
 
-        # If two keys pressed simultaneously
-        # we don't want snake to move into two directions
-        # simultaneously
-        if snake.change_to == 0 and snake.direction != 1:
-            snake.direction = 0
-        if snake.change_to == 1 and snake.direction != 0:
-            snake.direction = 1
-        if snake.change_to == 3 and snake.direction != 2:
-            snake.direction = 3
-        if snake.change_to == 2 and snake.direction != 3:
-            snake.direction = 2
+        snake.move()
+        snake.update_options()
 
-        # Moving the snake
-        if snake.direction == 0:
-            snake.snake_pos[1] -= 10
-        if snake.direction == 1:
-            snake.snake_pos[1] += 10
-        if snake.direction == 3:
-            snake.snake_pos[0] -= 10
-        if snake.direction == 2:
-            snake.snake_pos[0] += 10
+        if (snake.rect.left < 0 or snake.rect.right > WIDTH or
+                snake.rect.top < 0 or snake.rect.bottom > HEIGHT or
+                snake.check_collision(snake.rect.topleft)):
+            pygame.quit()
+            sys.exit()
 
-        # Snake body growing mechanism
-        # if snake head is in the same position as the food
-        if snake.food_spawn:
-            snake.food_pos = [random.randrange(1, (snake.frame_size_x // 10)) * 10,
-                              random.randrange(1, (snake.frame_size_y // 10)) * 10]
-        snake.food_spawn = False
-        snake.snake_body.insert(0, list(snake.snake_pos))
-        if snake.snake_pos == snake.food_pos:
-            snake.food_spawn = True
-            snake.score += 1
-        else:
-            snake.snake_body.pop()
+        if snake.rect.colliderect(food.rect):
+            snake.grow()
+            food.respawn(snake)
 
-        # Background
-        snake.game_window.fill(snake.black)
+        screen.fill(BLACK)
+        snake.draw(screen)
+        food.draw(screen)
+        draw_score(screen, snake.score)
+        pygame.display.flip()
 
-        # Draw Snake
-        for pos in snake.snake_body:
-            pygame.draw.rect(snake.game_window, snake.green, pygame.Rect(
-                pos[0], pos[1], 10, 10))
-
-        # Draw Food
-        pygame.draw.rect(snake.game_window, snake.white, pygame.Rect(
-            snake.food_pos[0], snake.food_pos[1], 10, 10))
-
-        # Game Over conditions
-        if snake.snake_pos[0] < 0 or snake.snake_pos[0] > snake.frame_size_x - 10:
-            snake.lives -= 1
-        if snake.snake_pos[1] < 0 or snake.snake_pos[1] > snake.frame_size_y - 10:
-            snake.lives -= 1
-
-        if snake.lives == 0:
-            break
-
-        # Touching the snake body
-        for block in snake.snake_body[1:]:
-            if snake.snake_pos == block:
-                break
-
-        # Score Display
-        snake.show_score(1, snake.white, 'consolas', 20)
-        # Refresh game screen
-        pygame.display.update()
-        # Frame Per Second /Refresh Rate
-        snake.fps_controller.tick(snake.difficulty)
+        clock.tick(fps)
 
         if connected:
             data = []
-            for attribute in instructions:
-                data.append(str(getattr(snake, attribute)))
-            data = dict(zip(instructions, data))
+            for class_name, attributes in instructions.items():
+                for obj in active_objects:
+                    if obj.__class__.__name__ == class_name and obj is not None:
+                        for attr in attributes:
+                            temp_obj = obj
+                            temp_attr = attr
+                            if "." in attr:
+                                parts = attr.split(".")
+                                temp_obj = getattr(obj, str(parts[0]))
+                                temp_attr = parts[1]
+                            if hasattr(temp_obj, temp_attr):
+                                data.append((attr, str(getattr(temp_obj, temp_attr))))
+
             s.sendall(pickle.dumps(data))
             action = s.recv(4096)
-            action = pickle.loads(action)
-            if action != 0:
-                pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+            if action:
+                action = pickle.loads(action)
+                if action != 0:
+                    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
+            else:
+                break
             time.sleep(0.001)
 
     s.close()
-    return
-
 
 if __name__ == "__main__":
-    run()
+    main()
+
+    # Closing the game
+    pygame.quit()
+    sys.exit()

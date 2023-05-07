@@ -89,6 +89,11 @@ def pillar_collision(bird, pillars):
     return False
 
 
+# def create_background():
+#     bg_objects = []
+#     bg_objects.append(pygame.Rect((0, 500, 800, 100),
+
+
 def main():
     global fps
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -104,7 +109,6 @@ def main():
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
 
-    pygame.display.set_caption("Flappy")
     clock = pygame.time.Clock()
 
     bird = Bird()
@@ -155,6 +159,7 @@ def main():
 
         # Draw
         screen.fill((100, 100, 100))
+        # create_background()
         all_sprites.draw(screen)
         draw_text(screen, f'Score: {bird.score}', 24, WIDTH // 2, 10)
         pygame.display.flip()

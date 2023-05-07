@@ -8,13 +8,17 @@ import pygame
 import neat
 import time
 
+from assets.utils import *
+
+
+pygame.init()
 
 def set_fitness(genome, score, duration):
     genome.fitness += score + duration
 
 
 class Trainer:
-    def __init__(self, game_name, game_path, inputs, outputs, threshold=100, population=50, start_gen=0):
+    def __init__(self, game_name, game_path, inputs, outputs, threshold=300, population=50, start_gen=-1):
         self.config_path = "..\\agents\\NEAT\\config.txt"
         self.game_h = None
         self.game_w = None
@@ -28,7 +32,25 @@ class Trainer:
         self.socket = None
         self.player_frame = [0, 0, 0, 0]
         self.add_essentials()
+
         self.score = 0
+        self.duration = 0
+
+        self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+        pygame.display.set_caption(f"{game_name} AI Train")
+        self.curr_generation = start_gen + 1
+        self.last_gemone = None
+        self.total_genomes = 0
+        self.last_five_genomes = []
+        self.best_genome = {"Key": -1, "fitness": -1000, "time": -1, "score": -1}
+        self.info_headers = [
+            (train_info("#", (265, 130))),
+            (train_info("Fitness", (490, 130))),
+            (train_info(f"GOAL: {self.threshold}", (490, 157), size=12)),
+            (train_info("Duration", (765, 130))),
+            (train_info("Score", (990, 130))),
+            (train_info("Best Genome", (SCREEN_W // 2, 460)))
+        ]
 
     def train_ai(self, genome, config):
         net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -58,14 +80,24 @@ class Trainer:
                 self.frame_penalty(game_w, game_h, genome)
 
             else:
-                duration = time.time() - start_time
-                if duration < 1:
-                    genome.fitness -= 2
+                self.duration = round(time.time() - start_time, 3)
+                if self.duration < 5 and self.score <= 10:
+                    genome.fitness = -20
+                elif self.score <= 5:
+                    genome.fitness = -5
+                elif self.duration < 2:
+                    genome.fitness = -30
                 break
 
-        set_fitness(genome, self.score, duration)
+        set_fitness(genome, self.score, self.duration)
         print(genome.key, ")\t Fitness: ", round(genome.fitness, 3),
-              "\t|\t Duration: ", round(duration, 3), "\t|\t Score: ", self.score)
+              "\t|\t Duration: ", self.duration, "\t|\t Score: ", self.score)
+
+        self.last_gemone = {"key": genome.key, "fitness": round(genome.fitness, 3), "time": self.duration, "score": self.score}
+
+        if len(self.last_five_genomes) >= 5:
+            self.last_five_genomes.pop(0)
+        self.last_five_genomes.append(self.last_gemone)
 
         return False
 
@@ -112,14 +144,18 @@ class Trainer:
 
         print(f"Requested attributes: {self.inputs}")
 
-        for i, (genome_id, genome) in enumerate(genomes):
+        for genome_id, genome in genomes:
             genome.fitness = 0
+            if self.last_gemone is None:
+                self.update_info(key=genome.key)
+            else:
+                self.update_info(genome)
             self.train_ai(genome, config)
 
         self.socket.close()
 
     def run_neat(self, config):
-        if self.start_gen == 0:
+        if self.start_gen == -1:
             p = neat.Population(config)
         else:
             checkpoint_file = '..\\agents\\NEAT\\cps\\Flappy Bird\\train_checkpoint_' + str(self.start_gen)
@@ -127,7 +163,6 @@ class Trainer:
 
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
-
         cps_path = "..\\agents\\NEAT\\cps\\" + self.game_name
         if not os.path.exists(cps_path):
             try:
@@ -182,9 +217,9 @@ class Trainer:
         data = client_socket.recv(4096)
         data, input_arr = self.organize_data(data)
 
+        print("\nData example:", data, "\nInputs example:", input_arr, "\nInput length:", len(input_arr))
         self.socket.close()
 
-        print(len(input_arr))
         return len(input_arr)
 
     def organize_data(self, data):
@@ -192,9 +227,15 @@ class Trainer:
         input_arr = np.array([])
         for s in data:
             value = s[1]
-            if '(' in s[1]:
-                arr = np.array(eval(value))
-                input_arr = np.concatenate((input_arr, arr.flatten()))
+            if '(' in s[1] or '[' in s[1]:
+                arr = eval(value)
+                if isinstance(arr[0], list) or isinstance(arr[0], np.ndarray):
+                    for sub_arr in arr:
+                        sub_arr = np.array(sub_arr)
+                        input_arr = np.concatenate((input_arr, sub_arr.flatten()))
+                else:
+                    arr = np.array(arr)
+                    input_arr = np.concatenate((input_arr, arr.flatten()))
             elif s[0] == 'score':
                 self.score = float(s[1])
             elif s[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h']:
@@ -225,3 +266,45 @@ class Trainer:
 
         with open(self.config_path, 'w') as file:
             file.writelines(updated_lines)
+
+    def update_info(self, genome=None, key=None):
+        if key is None:
+            key = genome.key
+        info = [
+            train_info(f"GENERATION: {self.curr_generation}", (10, 0), alignment="topleft"),
+            train_info(f"{self.total_genomes % self.population + 1}/{self.population}", (SCREEN_W // 2, 0),
+                       alignment="midtop"),
+            train_info(f"GENOME: {key}", (SCREEN_W - 10, 0), alignment="topright"),
+        ]
+
+        y_position = 195
+        if genome is not None:
+            if self.last_gemone["fitness"] > self.best_genome["fitness"]:
+                self.best_genome = self.last_gemone
+
+            for player in self.last_five_genomes:
+                info.append(train_info(str(player["key"]), (265, y_position)))
+                info.append(train_info(str(player["fitness"]), (490, y_position)))
+                info.append(train_info(str(player["time"]), (765, y_position)))
+                info.append(train_info(str(player["score"]), (990, y_position)))
+                y_position += 50
+
+            if self.total_genomes > 0:
+                info.append(train_info(str(self.best_genome["key"]), (265, 530)))
+                info.append(train_info(str(self.best_genome["fitness"]), (490, 530)))
+                info.append(train_info(str(self.best_genome["time"]), (765, 530)))
+                info.append(train_info(str(self.best_genome["score"]), (990, 530)))
+
+
+        self.screen.fill("black")
+
+        for label, rect in self.info_headers:
+            self.screen.blit(label, rect)
+
+        for label, rect in info:
+            self.screen.blit(label, rect)
+
+        pg.display.update()
+
+        self.total_genomes += 1
+        self.curr_generation = self.total_genomes // self.population

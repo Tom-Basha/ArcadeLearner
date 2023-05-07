@@ -44,3 +44,11 @@ def keyboard_key(text, color, pos):
 
 def attribute_header(text, color, pos, size):
     return label_creation(text, size, color, pos, "topleft")
+
+
+def train_info(text, pos, alignment="center", size=40):
+    font = pg.font.Font(paths.TRAIN_FONT, size)
+    label = font.render(text, True, WHITE)
+    rect = label.get_rect()
+    setattr(rect, alignment, pos)
+    return label, rect

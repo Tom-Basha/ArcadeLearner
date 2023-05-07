@@ -15,7 +15,7 @@ class KeySelection:
         self.curr_y = 200
 
         # Create a Pygame window
-        self.screen = pygame.display.set_mode((1280, 720))
+        self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Controls")
 
         # Create a dictionary of key labels and their rectangles

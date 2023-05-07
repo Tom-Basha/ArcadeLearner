@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
@@ -34,6 +35,8 @@ def selected_game(game, path):
     game_attributes = attribute_extractor(game_path)
     # selected_attributes = attributes_extractor(game_attributes)
 
+    # selected_attributes = {'PacMan': ['rect.center', 'map'], 'Ghost': ['rect.center']}
+    # selected_attributes = {'Snake': ['rect.center'], 'Food': ['rect.center']}
     selected_attributes = {'Bird': ['rect.center'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
     # selected_attributes = {'Player': ['rect.center'], 'Ball': ['rect.center']}
 
