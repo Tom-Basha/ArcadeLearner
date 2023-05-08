@@ -18,7 +18,7 @@ YELLOW = (255, 255, 0)
 FOOD = (190, 136, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-LIGHT_PURPLE = (255, 153, 255)
+PINK = (255, 153, 255)
 CYAN = (0, 255, 255)
 POWER_UP = (215, 100, 0)
 
@@ -70,6 +70,7 @@ def draw_power_up_block(x, y):
     pygame.draw.rect(screen, BLACK, [x, y, BLOCK_SIZE, BLOCK_SIZE], 0)
     pygame.draw.circle(screen, POWER_UP, [x + BLOCK_SIZE // 2, y + BLOCK_SIZE // 2], FOOD_RADIUS * 3, 0)
 
+
 # Define a function to draw the entire map
 def draw_map(map_matrix):
     for row in range(MAP_HEIGHT):
@@ -97,17 +98,18 @@ class PacMan:
         self.map = board
         self.direction = "up"
         self.next_direction = "up"
+        self.position = (x, y)
 
     def draw(self):
         pygame.draw.circle(screen, YELLOW, self.rect.center, PACMAN_SIZE // 2, 0)
 
-    def move(self, grid, ghosts):
+    def move(self, ghosts):
         # Check if the next_direction is possible
         next_x, next_y = self.rect.x, self.rect.y
         if self.next_direction == "right":
-            next_x = (self.rect.x + self.speed) % (len(grid[0]) * PACMAN_SIZE)
+            next_x = (self.rect.x + self.speed) % (len(self.map[0]) * PACMAN_SIZE)
         elif self.next_direction == "left":
-            next_x = (self.rect.x - self.speed) % (len(grid[0]) * PACMAN_SIZE)
+            next_x = (self.rect.x - self.speed) % (len(self.map[0]) * PACMAN_SIZE)
         elif self.next_direction == "up":
             next_y = (self.rect.y - self.speed)
         elif self.next_direction == "down":
@@ -117,16 +119,16 @@ class PacMan:
         grid_next_y = next_y // PACMAN_SIZE
 
         # Check if the grid position is within the grid bounds and not a wall (-1)
-        if (0 <= grid_next_x < len(grid[0])) and (0 <= grid_next_y < len(grid)):
-            if grid[grid_next_y][grid_next_x] != -1:
+        if (0 <= grid_next_x < len(self.map[0])) and (0 <= grid_next_y < len(self.map)):
+            if self.map[grid_next_y][grid_next_x] != -1:
                 self.direction = self.next_direction
 
         # Check if the current direction is possible
         if self.direction == "right":
-            next_x = (self.rect.x + self.speed) % (len(grid[0]) * PACMAN_SIZE)
+            next_x = (self.rect.x + self.speed) % (len(self.map[0]) * PACMAN_SIZE)
             next_y = self.rect.y
         elif self.direction == "left":
-            next_x = (self.rect.x - self.speed) % (len(grid[0]) * PACMAN_SIZE)
+            next_x = (self.rect.x - self.speed) % (len(self.map[0]) * PACMAN_SIZE)
             next_y = self.rect.y
         elif self.direction == "up":
             next_x = self.rect.x
@@ -139,8 +141,8 @@ class PacMan:
         grid_next_y = next_y // PACMAN_SIZE
 
         # Collect food if the current grid position is a food block (1)
-        if grid[grid_next_y][grid_next_x] == 1:
-            grid[grid_next_y][grid_next_x] = 0
+        if self.map[grid_next_y][grid_next_x] == 1:
+            self.map[grid_next_y][grid_next_x] = 0
             self.score += 1
         if map_matrix[grid_next_y][grid_next_x] == 2:
             map_matrix[grid_next_y][grid_next_x] = 0
@@ -158,18 +160,17 @@ class PacMan:
             for ghost in ghosts:
                 ghost.eat_phase = False
 
-
         # Move Pac-Man in the current direction if possible
-        if (0 <= grid_next_x < len(grid[0])) and (0 <= grid_next_y < len(grid)):
-            if grid[grid_next_y][grid_next_x] != -1:
+        if (0 <= grid_next_x < len(self.map[0])) and (0 <= grid_next_y < len(self.map)):
+            if self.map[grid_next_y][grid_next_x] != -1:
                 self.rect.x = next_x
                 self.rect.y = next_y
 
         # Wrap Pac-Man around the screen if it goes off the edges
-        if self.rect.left > (len(grid[0]) * PACMAN_SIZE):
+        if self.rect.left > (len(self.map[0]) * PACMAN_SIZE):
             self.rect.right = 0
         elif self.rect.right < 0:
-            self.rect.left = len(grid[0]) * PACMAN_SIZE
+            self.rect.left = len(self.map[0]) * PACMAN_SIZE
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -196,22 +197,21 @@ class Ghost:
         self.start_y = y
         self.speed = 20
         self.free = False
+        self.position = (x, y)
         self.color = color
         self.timer = timer
         self.last_move = pygame.time.get_ticks()
         self.direction = random.choice(["up", "down", "left", "right"])
         self.eat_phase = False
 
-    def move(self, grid):
-        # if self.color == RED:
-            # print(self.free, self.timer, self.last_move)
+    def move(self, grid, pacman_x, pacman_y, blinky=None):
         if pygame.time.get_ticks() - self.last_move > self.timer and not self.free:
             self.rect.x, self.rect.y = 14 * PACMAN_SIZE, 13 * PACMAN_SIZE
+            self.position = (14, 13)
             time.sleep(0.01)
             self.last_move = pygame.time.get_ticks()
             self.timer = 0
             self.free = True
-
 
         if self.free:
             # Check if the next_direction is possible
@@ -228,19 +228,93 @@ class Ghost:
             grid_next_x = next_x // PACMAN_SIZE
             grid_next_y = next_y // PACMAN_SIZE
 
-            if grid[grid_next_y][grid_next_x] != -1:
-                self.rect.x, self.rect.y = next_x, next_y
+            if grid[grid_next_y][grid_next_x] == -1:
+                self.random_move()
             else:
-                self.direction = random.choice(["up", "down", "left", "right"])
+                self.rect.x, self.rect.y = next_x, next_y
+                self.position = (next_x // 20, next_y // 20)
+                if self.color == RED:
+                    self.blinky(pacman_x, pacman_y)
+                elif self.color == PINK:
+                    self.pinky(pacman_x, pacman_y)
+                elif self.color == CYAN:
+                    self.inky(pacman_x, pacman_y, blinky.position[0], blinky.position[1])
+                elif self.color == GREEN:
+                    self.clyde(pacman_x, pacman_y)
 
     def draw(self):
         color = self.color
         if self.free:
             if self.eat_phase:
                 # Blink in blue and white if the ghost can be eaten
-                color = WHITE if self.timer % 400 < 200 else BLUE
+                color = WHITE if self.timer % 200 < 100 else BLUE
 
         pygame.draw.circle(screen, color, self.rect.center, PACMAN_SIZE // 2)
+
+    def blinky(self, pacman_x, pacman_y):
+        if self.in_line(pacman_x, pacman_y):
+            self.towards(pacman_x, pacman_y)
+        else:
+            self.random_move()
+
+    def pinky(self, pacman_x, pacman_y):
+        pacman_x, pacman_y = pacman_x + 4, pacman_y + 4
+        if self.in_map(pacman_x, pacman_y):
+            self.towards(pacman_x, pacman_y)
+        else:
+            self.random_move()
+
+    def inky(self, pacman_x, pacman_y, blinky_x, blinky_y):
+        target_x, target_y = pacman_x * 2 - blinky_x, pacman_y * 2 - blinky_y
+        if self.in_map(target_x, target_y):
+            self.towards(target_x, target_y)
+        else:
+            self.random_move()
+
+    def clyde(self, pacman_x, pacman_y):
+        if self.distance_x(pacman_x) > 8 and self.distance_y(pacman_y) > 8:
+            self.random_move()
+        else:
+            self.away(pacman_x, pacman_y)
+
+    def in_line(self, pacman_x, pacman_y):
+        return self.position[0] == pacman_x or self.position[1] == pacman_y
+
+    def towards(self, pacman_x, pacman_y):
+        if self.position[0] == pacman_x:
+            if self.position[1] < pacman_y:
+                self.direction = "down"
+            else:
+                self.direction = "up"
+        else:
+            if self.position[0] < pacman_x:
+                self.direction = "right"
+            else:
+                self.direction = "left"
+
+    def random_move(self):
+        self.direction = random.choice(["up", "down", "left", "right"])
+
+    def in_map(self, pacman_x, pacman_y):
+        return 0 <= pacman_x <= 27 and 2 <= pacman_y <= 32
+
+    def distance_x(self, pacman_x):
+        return pacman_x - self.position[0]
+
+    def distance_y(self, pacman_y):
+        return pacman_y - self.position[1]
+
+    def away(self, pacman_x, pacman_y):
+        if self.distance_x(pacman_x) < self.distance_y(pacman_y):
+            if self.position[0] < pacman_x:
+                self.direction = "left"
+            else:
+                self.direction = "right"
+        else:
+            if self.position[1] < pacman_y:
+                self.direction = "up"
+            else:
+                self.direction = "down"
 
 
 # Define the matrix representing the map (fill in the matrix here)
@@ -281,6 +355,7 @@ map_matrix = [
     [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
 ]
 
+
 def main():
     global fps
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -298,13 +373,12 @@ def main():
 
     pacman = PacMan(START_X, START_Y, map_matrix)
 
-
     # Create pacman and 4 ghosts
     ghosts = [
         Ghost(12, 16, RED, 3000),
-        Ghost(15, 16, GREEN, 6000),
-        Ghost(13, 16, LIGHT_PURPLE, 9000),
-        Ghost(14, 16, CYAN, 12000),
+        Ghost(15, 16, PINK, 6000),
+        Ghost(13, 16, CYAN, 9000),
+        Ghost(14, 16, GREEN, 12000),
     ]
 
     active_objects = [pacman, ghosts[0], ghosts[1], ghosts[2], ghosts[3]]
@@ -322,11 +396,11 @@ def main():
                     running = False
             pacman.handle_event(event)
 
-        # Move ghosts randomly
+        # Move ghosts
         for ghost in ghosts:
-            ghost.move(map_matrix)
+            ghost.move(pacman.map, pacman.rect.x // 20, pacman.rect.y // 20, ghosts[0])
 
-        pacman.move(map_matrix, ghosts)
+        pacman.move(ghosts)
 
         for ghost in ghosts:
             if pacman.rect.colliderect(ghost.rect):
@@ -341,7 +415,7 @@ def main():
 
         # Draw Pac-Man
         screen.fill(BLACK)
-        draw_map(map_matrix)
+        draw_map(pacman.map)
         pacman.draw()
         for obj in ghosts + [pacman]:
             obj.draw()

@@ -158,7 +158,7 @@ class Trainer:
         if self.start_gen == -1:
             p = neat.Population(config)
         else:
-            checkpoint_file = '..\\agents\\NEAT\\cps\\Flappy Bird\\train_checkpoint_' + str(self.start_gen)
+            checkpoint_file = '..\\agents\\NEAT\\cps\\' + self.game_name + '\\train_checkpoint_' + str(self.start_gen)
             p = neat.checkpoint.Checkpointer.restore_checkpoint(checkpoint_file)
 
         p.add_reporter(neat.StdOutReporter(True))
