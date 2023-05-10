@@ -1,9 +1,12 @@
+import pygame
+
+from assets.paths import *
 from assets.utils import *
 
 
 class Button:
     def __init__(self, pos, text, font, color, hover_color=None, outline=False, bg=paths.BUTTON_BG):
-        self.image = pg.image.load(paths.BUTTON_BG) if bg != False else None
+        self.image = pg.image.load(bg) if bg != False else None
         self.x_pos = pos[0]
         self.y_pos = pos[1]
         self.font = font
@@ -82,3 +85,7 @@ def games_buttons(games_list):
         buttons.append(button)
 
     return buttons
+
+
+def training_btn(pos, text):
+    return Button(pos, text, get_font(28, paths.TRAIN_FONT), BLACK, MAIN_CLR, bg=paths.TRAINING_BTN)

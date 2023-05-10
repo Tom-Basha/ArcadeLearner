@@ -8,17 +8,20 @@ import pygame
 import neat
 import time
 
+from assets.button import training_btn
 from assets.utils import *
-
 
 pygame.init()
 
+
 def set_fitness(genome, score, duration):
-    genome.fitness += score + duration
+    genome.fitness += score + duration / 2
 
 
 class Trainer:
-    def __init__(self, game_name, game_path, inputs, outputs, threshold=300, population=50, start_gen=-1):
+    def __init__(self, game_name, game_path, inputs, outputs, threshold=300, population=50, generations=1000,
+                 start_gen=-1):
+        self.generations = generations
         self.config_path = "..\\agents\\NEAT\\config.txt"
         self.game_h = None
         self.game_w = None
@@ -31,18 +34,31 @@ class Trainer:
         self.outputs = list(outputs)
         self.socket = None
         self.player_frame = [0, 0, 0, 0]
+        self.prev_player_frame = [0, 0, 0, 0]
         self.add_essentials()
 
         self.score = 0
         self.duration = 0
 
+        self.quit_training = False
+        self.pause_training = False
+
+        self.buttons = [
+            training_btn((365, 635), "Next Genome"),
+            training_btn((640, 635), "Pause Training"),
+            training_btn((915, 635), "Quit Training")
+        ]
+
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption(f"{game_name} AI Train")
         self.curr_generation = start_gen + 1
         self.last_gemone = None
+        self.last_gemone_obj = None
+
         self.total_genomes = 0
         self.last_five_genomes = []
         self.best_genome = {"Key": -1, "fitness": -1000, "time": -1, "score": -1}
+        self.best_genome_obj = None
         self.info_headers = [
             (train_info("#", (265, 130))),
             (train_info("Fitness", (490, 130))),
@@ -56,6 +72,7 @@ class Trainer:
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         subprocess.Popen(["python", self.game_path], shell=True)
 
+        print("hi", genome.key)
         client_socket, addr = self.socket.accept()
         client_socket.sendall(pickle.dumps(self.inputs))
 
@@ -70,30 +87,35 @@ class Trainer:
             if data:
                 data, input_arr = self.organize_data(data)
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        return True
+                self.update_buttons()
+                mouse_pos = pg.mouse.get_pos()
+                if self.handle_training_events(mouse_pos, genome):
+                    break
 
                 move = self.action(net, input_arr, genome)
                 client_socket.sendall(pickle.dumps(move))
                 self.frame_penalty(game_w, game_h, genome)
 
+                if genome.fitness >= self.threshold:
+                    break
             else:
-                self.duration = round(time.time() - start_time, 3)
-                if self.duration < 5 and self.score <= 10:
-                    genome.fitness = -20
-                elif self.score <= 5:
-                    genome.fitness = -5
-                elif self.duration < 2:
-                    genome.fitness = -30
                 break
+
+        self.duration = round(time.time() - start_time, 3)
+        if self.duration < 5 and self.score <= 10:
+            genome.fitness = -20
+        elif self.score <= 5:
+            genome.fitness = -5
+        elif self.duration < 2:
+            genome.fitness = -30
 
         set_fitness(genome, self.score, self.duration)
         print(genome.key, ")\t Fitness: ", round(genome.fitness, 3),
               "\t|\t Duration: ", self.duration, "\t|\t Score: ", self.score)
 
-        self.last_gemone = {"key": genome.key, "fitness": round(genome.fitness, 3), "time": self.duration, "score": self.score}
+        self.last_gemone = {"key": genome.key, "fitness": round(genome.fitness, 3), "time": self.duration,
+                            "score": self.score}
+        self.last_gemone_obj = genome
 
         if len(self.last_five_genomes) >= 5:
             self.last_five_genomes.pop(0)
@@ -136,6 +158,16 @@ class Trainer:
         if self.player_frame[3] == h:
             genome.fitness -= 0.01
 
+        moved = False
+        for i in range(len(self.player_frame)):
+            if self.player_frame[i] != self.prev_player_frame[i]:
+                moved = True
+
+        if not moved:
+            genome.fitness -= 0.01
+
+        self.prev_player_frame = self.player_frame.copy()
+
     def genomes_eval(self, genomes, config):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('localhost', 8888))
@@ -151,6 +183,28 @@ class Trainer:
             else:
                 self.update_info(genome)
             self.train_ai(genome, config)
+            print(f"STOP {self.pause_training}, QUIT {self.quit_training}")
+            while self.pause_training:
+                if self.quit_training:
+                    break
+                mouse_pos = pg.mouse.get_pos()
+                if self.handle_training_events(mouse_pos, genome):
+                    break
+                if self.last_gemone is None:
+                    self.info(key=genome.key)
+                else:
+                    self.info(genome)
+            if self.pause_training and self.quit_training:
+                break
+
+        self.buttons = [
+            training_btn((640, 635), "Return")
+        ]
+        while not self.quit_training:
+            mouse_pos = pg.mouse.get_pos()
+            if self.handle_training_events(mouse_pos, self.last_gemone):
+                break
+            self.info(self.last_gemone_obj)
 
         self.socket.close()
 
@@ -176,9 +230,14 @@ class Trainer:
         p.add_reporter(stats)
         p.add_reporter(checkpointer)
 
-        winner = p.run(self.genomes_eval, self.population)
-        with open(cps_path + "\\trained_ai.pickle", "wb") as f:
-            pickle.dump(winner, f)
+        try:
+            winner = p.run(self.genomes_eval, 1)
+            with open(cps_path + "\\trained_ai", "wb") as f:
+                pickle.dump(winner, f)
+        except TypeError:
+            winner = self.best_genome_obj
+            with open(cps_path + "\\unfinished_best_genome", "wb") as f:
+                pickle.dump(winner, f)
 
         # Copy config with train setting
         destination_file = os.path.join(cps_path, 'config.txt')
@@ -268,10 +327,58 @@ class Trainer:
             file.writelines(updated_lines)
 
     def update_info(self, genome=None, key=None):
+        self.info(genome, key)
+
+        self.total_genomes += 1
+        self.curr_generation = self.total_genomes // self.population
+
+    def handle_training_events(self, mouse_pos, genome):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return True
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                if self.buttons[0].check_input(mouse_pos):
+                    if self.buttons[0].text_input == "Next Genome":
+                        return True
+                    elif self.buttons[0].text_input == "Resume Training":
+                        self.buttons = [
+                            training_btn((365, 635), "Next Genome"),
+                            training_btn((640, 635), "Pause Training"),
+                            training_btn((915, 635), "Quit Training")
+                        ]
+                        self.info(genome)
+                        self.pause_training = False
+                if len(self.buttons) >= 2:
+                    if self.buttons[1].check_input(mouse_pos):
+                        if self.buttons[1].text_input == "Pause Training":
+                            print("PAUSE")
+                            self.pause_training = True
+                            self.buttons = [
+                                training_btn((490, 635), "Resume Training"),
+                                training_btn((790, 635), "Quit Training")
+                            ]
+                            self.info(genome)
+                            return True
+                        else:
+                            self.quit_training = True
+                            return True
+                if len(self.buttons) == 3:
+                    if self.buttons[2].check_input(mouse_pos):
+                        print(f"STOP {self.pause_training}, QUIT {self.quit_training}")
+
+                        self.pause_training = True
+                        self.quit_training = True
+                        return True
+
+        return False
+
+    def info(self, genome=None, key=None):
         if key is None:
             key = genome.key
         info = [
             train_info(f"GENERATION: {self.curr_generation}", (10, 0), alignment="topleft"),
+            train_info(f"MAX GENERATIONS: {self.generations}", (10, 45), alignment="topleft", size=14),
             train_info(f"{self.total_genomes % self.population + 1}/{self.population}", (SCREEN_W // 2, 0),
                        alignment="midtop"),
             train_info(f"GENOME: {key}", (SCREEN_W - 10, 0), alignment="topright"),
@@ -281,6 +388,7 @@ class Trainer:
         if genome is not None:
             if self.last_gemone["fitness"] > self.best_genome["fitness"]:
                 self.best_genome = self.last_gemone
+                self.best_genome_obj = self.last_gemone_obj
 
             for player in self.last_five_genomes:
                 info.append(train_info(str(player["key"]), (265, y_position)))
@@ -295,7 +403,6 @@ class Trainer:
                 info.append(train_info(str(self.best_genome["time"]), (765, 530)))
                 info.append(train_info(str(self.best_genome["score"]), (990, 530)))
 
-
         self.screen.fill("black")
 
         for label, rect in self.info_headers:
@@ -304,7 +411,13 @@ class Trainer:
         for label, rect in info:
             self.screen.blit(label, rect)
 
-        pg.display.update()
+        self.update_buttons()
 
-        self.total_genomes += 1
-        self.curr_generation = self.total_genomes // self.population
+    def update_buttons(self):
+        mouse_pos = pg.mouse.get_pos()
+
+        for button in self.buttons:
+            button.change_color(mouse_pos)
+            button.update(self.screen)
+
+        pg.display.update()

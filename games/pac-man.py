@@ -165,6 +165,7 @@ class PacMan:
             if self.map[grid_next_y][grid_next_x] != -1:
                 self.rect.x = next_x
                 self.rect.y = next_y
+                self.position = (grid_next_x, grid_next_y)
 
         # Wrap Pac-Man around the screen if it goes off the edges
         if self.rect.left > (len(self.map[0]) * PACMAN_SIZE):
@@ -230,6 +231,7 @@ class Ghost:
 
             if grid[grid_next_y][grid_next_x] == -1:
                 self.random_move()
+                self.random_direction = True
             else:
                 self.rect.x, self.rect.y = next_x, next_y
                 self.position = (next_x // 20, next_y // 20)
@@ -254,22 +256,16 @@ class Ghost:
     def blinky(self, pacman_x, pacman_y):
         if self.in_line(pacman_x, pacman_y):
             self.towards(pacman_x, pacman_y)
-        else:
-            self.random_move()
 
     def pinky(self, pacman_x, pacman_y):
         pacman_x, pacman_y = pacman_x + 4, pacman_y + 4
         if self.in_map(pacman_x, pacman_y):
             self.towards(pacman_x, pacman_y)
-        else:
-            self.random_move()
 
     def inky(self, pacman_x, pacman_y, blinky_x, blinky_y):
         target_x, target_y = pacman_x * 2 - blinky_x, pacman_y * 2 - blinky_y
         if self.in_map(target_x, target_y):
             self.towards(target_x, target_y)
-        else:
-            self.random_move()
 
     def clyde(self, pacman_x, pacman_y):
         if self.distance_x(pacman_x) > 8 and self.distance_y(pacman_y) > 8:
@@ -364,7 +360,7 @@ def main():
         s.connect(('localhost', 8888))
         instructions = pickle.loads(s.recv(4096))
         connected = True
-        fps = 0
+        fps = 30
     except ConnectionRefusedError:
         pass
 
@@ -375,10 +371,10 @@ def main():
 
     # Create pacman and 4 ghosts
     ghosts = [
-        Ghost(12, 16, RED, 3000),
-        Ghost(15, 16, PINK, 6000),
-        Ghost(13, 16, CYAN, 9000),
-        Ghost(14, 16, GREEN, 12000),
+        Ghost(12, 16, RED, 100),
+        Ghost(15, 16, PINK, 2500),
+        Ghost(13, 16, CYAN, 5000),
+        Ghost(14, 16, GREEN, 8000),
     ]
 
     active_objects = [pacman, ghosts[0], ghosts[1], ghosts[2], ghosts[3]]

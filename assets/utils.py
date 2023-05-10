@@ -18,8 +18,8 @@ SCREEN_H = 720
 
 
 # Set up font
-def get_font(size):
-    return pg.font.Font(paths.MAIN_FONT, size)
+def get_font(size, font=paths.MAIN_FONT):
+    return pg.font.Font(font, size)
 
 
 # Labels presets

@@ -11,7 +11,8 @@ import pygame
 class AI_Player:
     def __init__(self, game_name, game_path, inputs, outputs):
         self.config_path = "..\\agents\\NEAT\\cps\\" + game_name + "\\config.txt"
-        self.player = "..\\agents\\NEAT\\cps\\" + game_name + "\\trained_ai.pickle"
+        self.player = "..\\agents\\NEAT\\cps\\" + game_name + "\\trained_ai"
+        self.player_unfinished = "..\\agents\\NEAT\\cps\\" + game_name + "\\unfinished_best_genome"
         self.game_name = game_name
         self.game_path = game_path
         self.inputs = inputs
@@ -19,12 +20,20 @@ class AI_Player:
         self.socket = None
 
     def neat_setup(self):
-        if os.path.exists(self.player):
+        playable = False
+        player = None
+        if os.path.exists(self.player) or os.path.exists(self.player_unfinished):
+            playable = True
+            if os.path.exists(self.player):
+                player = self.player
+            else:
+                player = self.player_unfinished
+        if playable:
             config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                  neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                  self.config_path)
 
-            with open(self.player, "rb") as f:
+            with open(player, "rb") as f:
                 winner = pickle.load(f)
             winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
 
