@@ -1,19 +1,28 @@
-import pygame
 import sys
+from assets.components.button import *
+from assets.utils import *
+from assets.paths import *
 
 # Initialize Pygame
 pygame.init()
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+pygame.display.set_caption("Settings")
+font = pygame.font.Font(None, 24)
 
 
 # Slider class
 class Slider:
-    def __init__(self, x, y, width, height, min_val, max_val, jump, curr_value=-1):
+    def __init__(self, x, y, width, height, min_val, max_val, jump, curr_value=-1, pop_size=50, fitness_threshold=250,
+                 hidden_layers=4):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.min_val = min_val
         self.max_val = max_val
+        self.pop_size = pop_size  # initial value for population
+        self.fitness_threshold = fitness_threshold  # initial value for threshold
+        self.hidden_layers = hidden_layers  # initial value for threshold
         self.slider_pos = x
         self.slider_width = 20
         self.slider_height = 20
@@ -23,16 +32,16 @@ class Slider:
 
         # Set the initial position of the slider based on the current value
         if curr_value != -1:
-            self.slider_pos = max(self.x, min(self.x + (self.width - self.slider_width) * self.value / self.max_val, self.x + self.width - self.slider_width))
+            self.slider_pos = max(self.x, min(self.x + (self.width - self.slider_width) * self.value / self.max_val,
+                                              self.x + self.width - self.slider_width))
 
     def draw(self, screen):
         # Draw the slider bar
         pygame.draw.rect(screen, (200, 200, 200), (self.x, self.y, self.width, self.height), border_radius=10)
-        pygame.draw.rect(screen, (50, 50, 50), (self.slider_pos, self.y - 5, self.slider_width, self.slider_height),
+        pygame.draw.rect(screen, GREEN, (self.slider_pos, self.y - 5, self.slider_width, self.slider_height),
                          border_radius=15)
 
         # Draw the marks
-        font = pygame.font.SysFont(None, 24)
         mark_step = max(self.jump, (self.max_val - self.min_val) // 10)
         offset = 10
         intervals = (self.max_val - self.min_val) // self.jump
@@ -42,15 +51,23 @@ class Slider:
             if show_every_other and i % 2 != 0:
                 continue
             value = self.min_val + i * self.jump
-            mark_text = font.render(str(value), True, (0, 0, 0))
+            mark_text = font.render(str(value), True, WHITE)
             mark_rect = mark_text.get_rect(
                 center=(self.x + offset + i * (self.width - 2 * offset) // intervals, self.y - 20))
             screen.blit(mark_text, mark_rect)
 
         # Draw the value text
-        value_text = font.render(f"Value: {self.value}", True, (0, 0, 0))
+        value_text = font.render(f"Value: {self.value}", True, WHITE)
         text_rect = value_text.get_rect(center=(self.x + self.width // 2, self.y + 50))
         screen.blit(value_text, text_rect)
+
+        # Draw values on screen
+        pop_text = font.render("Choose the population size: ", True, (255, 255, 255))
+        thresh_text = font.render("Choose the fitness threshold: ", True, (255, 255, 255))
+        hid_text = font.render("Choose the hidden layers: ", True, (255, 255, 255))
+        screen.blit(pop_text, (50, 200))
+        screen.blit(thresh_text, (50, 350))
+        screen.blit(hid_text, (50, 500))
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -70,19 +87,21 @@ class Slider:
     def update_slider_pos(self, pos):
         self.slider_pos = max(self.x, min(pos[0] - self.slider_width // 2, self.x + self.width - self.slider_width))
         self.value = round(
-            (self.slider_pos - self.x) * (self.max_val - self.min_val) / (self.width - self.slider_width) / self.jump) * self.jump
+            (self.slider_pos - self.x) * (self.max_val - self.min_val) / (
+                    self.width - self.slider_width) / self.jump) * self.jump
         self.value = max(self.min_val, min(self.value + self.min_val, self.max_val))
+        if self == slider:
+            self.pop_size = self.value
+        if self == slider1:
+            self.fitness_threshold = self.value
+        if self == slider2:
+            self.hidden_layers = self.value
 
-
-# Set up the display
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Slider Example")
 
 # Create a slider
-slider = Slider(200, 100, 400, 10, 30, 100, 5, 50)
-slider1 = Slider(200, 300, 400, 10, 100, 1000, 50, 250)
-slider2 = Slider(200, 500, 400, 10, 1, 5, 1, 4)
+slider = Slider(430, 200, 400, 10, 30, 100, 5, 50)
+slider1 = Slider(430, 350, 400, 10, 100, 1000, 50, 250)
+slider2 = Slider(430, 500, 400, 10, 1, 5, 1, 4)
 
 # Main loop
 running = True
@@ -94,7 +113,20 @@ while running:
         slider1.handle_event(event)
         slider2.handle_event(event)
 
-    screen.fill((255, 255, 255))
+    MENU_MOUSE_POS = pg.mouse.get_pos()
+
+    BACK_BTN = back_btn()
+    BACK_BTN.change_color(MENU_MOUSE_POS)
+
+    BG = pygame.image.load(BACKGROUND_IMAGE)
+    screen.blit(BG, (0, 0))
+
+    BACK_BTN.update(screen)
+    HEADER, HEADER_RECT = header("SETTINGS")
+    SUBHEAD, SUBHEAD_RECT = subhead("SELECT THE RELEVANT VALUES FOR THE AI LEARNING PROCESS", 16)
+    screen.blit(HEADER, HEADER_RECT)
+    screen.blit(SUBHEAD, SUBHEAD_RECT)
+
     slider.draw(screen)
     slider1.draw(screen)
     slider2.draw(screen)

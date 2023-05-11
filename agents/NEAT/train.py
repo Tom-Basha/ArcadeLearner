@@ -8,7 +8,7 @@ import pygame
 import neat
 import time
 
-from assets.button import training_btn
+from assets.components.button import training_btn
 from assets.utils import *
 
 pygame.init()
@@ -19,7 +19,7 @@ def set_fitness(genome, score, duration):
 
 
 class Trainer:
-    def __init__(self, game_name, game_path, inputs, outputs, threshold=300, population=50, generations=1000,
+    def __init__(self, game_name, game_path, inputs, outputs, threshold=350, population=50, generations=1000,
                  start_gen=-1):
         self.generations = generations
         self.config_path = "..\\agents\\NEAT\\config.txt"
@@ -72,7 +72,6 @@ class Trainer:
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         subprocess.Popen(["python", self.game_path], shell=True)
 
-        print("hi", genome.key)
         client_socket, addr = self.socket.accept()
         client_socket.sendall(pickle.dumps(self.inputs))
 
@@ -110,8 +109,7 @@ class Trainer:
             genome.fitness = -30
 
         set_fitness(genome, self.score, self.duration)
-        print(genome.key, ")\t Fitness: ", round(genome.fitness, 3),
-              "\t|\t Duration: ", self.duration, "\t|\t Score: ", self.score)
+        print(f"{genome.key}.\t\t Fitness: {round(genome.fitness, 3)}\t|\t Duration: {self.duration}\t|\t Score: {self.score}")
 
         self.last_gemone = {"key": genome.key, "fitness": round(genome.fitness, 3), "time": self.duration,
                             "score": self.score}
@@ -183,7 +181,6 @@ class Trainer:
             else:
                 self.update_info(genome)
             self.train_ai(genome, config)
-            print(f"STOP {self.pause_training}, QUIT {self.quit_training}")
             while self.pause_training:
                 if self.quit_training:
                     break
@@ -197,14 +194,15 @@ class Trainer:
             if self.pause_training and self.quit_training:
                 break
 
-        self.buttons = [
-            training_btn((640, 635), "Return")
-        ]
-        while not self.quit_training:
-            mouse_pos = pg.mouse.get_pos()
-            if self.handle_training_events(mouse_pos, self.last_gemone):
-                break
-            self.info(self.last_gemone_obj)
+        if self.quit_training:
+            self.buttons = [
+                training_btn((640, 635), "Return")
+            ]
+            while not self.quit_training:
+                mouse_pos = pg.mouse.get_pos()
+                if self.handle_training_events(mouse_pos, self.last_gemone):
+                    break
+                self.info(self.last_gemone_obj)
 
         self.socket.close()
 
@@ -231,7 +229,7 @@ class Trainer:
         p.add_reporter(checkpointer)
 
         try:
-            winner = p.run(self.genomes_eval, 1)
+            winner = p.run(self.genomes_eval, self.generations)
             with open(cps_path + "\\trained_ai", "wb") as f:
                 pickle.dump(winner, f)
         except TypeError:
@@ -330,7 +328,7 @@ class Trainer:
         self.info(genome, key)
 
         self.total_genomes += 1
-        self.curr_generation = self.total_genomes // self.population
+        self.curr_generation = (self.total_genomes - 1) // self.population
 
     def handle_training_events(self, mouse_pos, genome):
         for event in pygame.event.get():
@@ -352,7 +350,6 @@ class Trainer:
                 if len(self.buttons) >= 2:
                     if self.buttons[1].check_input(mouse_pos):
                         if self.buttons[1].text_input == "Pause Training":
-                            print("PAUSE")
                             self.pause_training = True
                             self.buttons = [
                                 training_btn((490, 635), "Resume Training"),
@@ -365,7 +362,6 @@ class Trainer:
                             return True
                 if len(self.buttons) == 3:
                     if self.buttons[2].check_input(mouse_pos):
-                        print(f"STOP {self.pause_training}, QUIT {self.quit_training}")
 
                         self.pause_training = True
                         self.quit_training = True

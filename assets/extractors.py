@@ -1,7 +1,9 @@
 import ast
 import re
 import os
+import json
 
+from assets.paths import ATTRIBUTES_JSON
 from testings.key_map import key_mapping
 
 
@@ -30,6 +32,7 @@ def keys_extractor(file_path):
 
     return set(keys)
 
+
 def attribute_extractor(file_path):
     with open(file_path, "r") as f:
         tree = ast.parse(f.read())
@@ -57,4 +60,19 @@ def attribute_extractor(file_path):
     return [(class_name, attrs) for class_name, attrs in class_features.items()]
 
 
+def match_attributes(game_attributes):
+    with open(ATTRIBUTES_JSON, 'r') as f:
+        json_data = json.load(f)
 
+    match_dict = {}
+
+    for obj_type, obj_attrs in game_attributes:
+        if obj_type != "BaseObject":
+            attributes = []
+            for attr in obj_attrs:
+                if attr in json_data:
+                    attributes.append(attr)
+            if len(attributes) != 0:
+                match_dict[obj_type] = attributes
+
+    return match_dict

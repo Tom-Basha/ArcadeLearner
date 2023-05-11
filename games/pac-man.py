@@ -40,7 +40,7 @@ FOOD_RADIUS = 2
 MAP_WIDTH = 28
 MAP_HEIGHT = 33
 
-fps = 30
+fps = 20
 # Initialize Pygame
 pygame.init()
 
@@ -360,7 +360,7 @@ def main():
         s.connect(('localhost', 8888))
         instructions = pickle.loads(s.recv(4096))
         connected = True
-        fps = 30
+        fps = 0
     except ConnectionRefusedError:
         pass
 

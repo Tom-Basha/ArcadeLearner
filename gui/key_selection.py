@@ -1,6 +1,5 @@
-import pygame
 import pygame.gfxdraw
-from assets.button import *
+from assets.components.button import *
 from assets.paths import *
 
 

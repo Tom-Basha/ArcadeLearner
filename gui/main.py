@@ -1,12 +1,15 @@
 import os
 import subprocess
 
+from assets.components.button import *
+from attribute_selection import *
+
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import key_selection as ks
 from agents.NEAT.train import Trainer
 from agents.NEAT.watch_ai import AI_Player
-from attribute_selection import *
+
 from assets.extractors import *
 from assets.error import *
 
@@ -33,9 +36,10 @@ def selected_game(game, path):
     PLAY_BACK = back_btn()
 
     game_attributes = attribute_extractor(game_path)
-    # selected_attributes = attributes_extractor(game_attributes)
+    selected_attributes = match_attributes(game_attributes)
 
-    selected_attributes = {'PacMan': ['position', 'map'], 'Ghost': ['position']}
+    print(selected_attributes)
+    # selected_attributes = {'PacMan': ['position', 'map'], 'Ghost': ['position']}
     # selected_attributes = {'Snake': ['rect.center'], 'Food': ['rect.center']}
     # selected_attributes = {'Bird': ['rect.center'], 'Pillar': ['x_pos', 'gap_top', 'gap_bottom']}
     # selected_attributes = {'Player': ['rect.center'], 'Ball': ['rect.center']}
@@ -67,8 +71,7 @@ def selected_game(game, path):
                     if not trained:
                         error_msg(['Trained AI was not found.', 'Make sure to train your AI first.'])
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
-                    print("\nSetting up training for %s.\nSelected keys: %s\nSelected attributes: %s" % (
-                        game, selected_keys, selected_attributes))
+                    print(f"\nSetting up training for {game}.\nSelected keys: {selected_keys}\nSelected attributes: {selected_attributes}")
 
                     trainer = Trainer(game, path, selected_attributes, selected_keys)
                     trainer.neat_setup()
@@ -79,7 +82,6 @@ def selected_game(game, path):
                     # PLACEHOLDER - function that automatically select attributes
 
                     selected_attributes = attribute_selection(game_attributes, selected_attributes)
-                    print(selected_attributes)
 
                 if PLAY_BACK.check_input(MENU_MOUSE_POS):
                     main_menu()

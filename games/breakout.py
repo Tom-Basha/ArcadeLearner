@@ -13,7 +13,7 @@ import sys
 # Game settings
 WIDTH = 1280
 HEIGHT = 720
-
+fps = 60
 # Block settings
 COLOR_LEGEND = {
     "1": "blue",
@@ -68,6 +68,46 @@ class BaseObject(pygame.sprite.Sprite):
 
     def draw(self, window):
         pass
+
+
+class Player(BaseObject):
+    def __init__(self, groups, obstacles):
+        super(Player, self).__init__()
+        self.x = 1280 / 2
+        self.y = 688
+        self.width = 120
+        self.height = 27
+        self.speed = 7
+        self.speed_x = 0
+        self.rect = pygame.Rect((0, 0), (self.width, self.height))
+        self.rect.center = (self.x, self.y)
+        self.color = pygame.Color("white")
+        self.image = pygame.Surface((self.rect.width, self.rect.height))
+        self.image.fill(self.color)
+        self.old_rect = self.rect.copy()
+        self.groups = groups
+        self.obstacles = obstacles
+        self.lives = 1
+        self.score = 0
+
+    def update(self):
+        # Previous frame
+        self.old_rect = self.rect.copy()
+
+        self.keystate = pygame.key.get_pressed()
+
+        # Current frame (x position)
+        self.rect.x += self.speed_x
+
+        # Preventing player from leaving the screen
+        if self.rect.right >= WIDTH:
+            self.rect.right = WIDTH
+
+        elif self.rect.left <= 0:
+            self.rect.left = 0
+
+        if self.score > 9999999:
+            self.score = 9999999
 
 
 class Block(BaseObject):
@@ -140,46 +180,6 @@ def stage_setup(groups, obstacles, level=1):
     return block_group
 
 
-class Player(BaseObject):
-    def __init__(self, groups, obstacles):
-        super(Player, self).__init__()
-        self.x = 1280 / 2
-        self.y = 688
-        self.width = 120
-        self.height = 27
-        self.speed = 7
-        self.speed_x = 0
-        self.rect = pygame.Rect((0, 0), (self.width, self.height))
-        self.rect.center = (self.x, self.y)
-        self.color = pygame.Color("white")
-        self.image = pygame.Surface((self.rect.width, self.rect.height))
-        self.image.fill(self.color)
-        self.old_rect = self.rect.copy()
-        self.groups = groups
-        self.obstacles = obstacles
-        self.lives = 1
-        self.score = 0
-
-    def update(self):
-        # Previous frame
-        self.old_rect = self.rect.copy()
-
-        self.keystate = pygame.key.get_pressed()
-
-        # Current frame (x position)
-        self.rect.x += self.speed_x
-
-        # Preventing player from leaving the screen
-        if self.rect.right >= WIDTH:
-            self.rect.right = WIDTH
-
-        elif self.rect.left <= 0:
-            self.rect.left = 0
-
-        if self.score > 9999999:
-            self.score = 9999999
-
-
 class Ball(BaseObject):
     def __init__(self, groups, obstacles, player, surf_rect):
         super(Ball, self).__init__()
@@ -229,7 +229,6 @@ class Ball(BaseObject):
             self.collision("vertical")
             self.collision_window("vertical")
             self.rect.y = round(self.rect.y)
-
 
     def reset_ball(self):
         if self.player.lives > 0:
@@ -449,7 +448,7 @@ class Game(object):
         self.done = False
         self.window = window
         self.clock = pygame.time.Clock()
-        self.fps = 0
+
         self.state_name = "GAMEPLAY"
         self.state = GamePlay()
 
@@ -476,19 +475,22 @@ class Game(object):
         self.state.draw(self.window)
 
     def run(self):
+        global fps
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connected = False
         try:
             s.connect(('localhost', 8888))
             instructions = pickle.loads(s.recv(4096))
+            # print(f"Requested attributes: {instructions}")
             connected = True
+            fps = 0
         except ConnectionRefusedError:
             pass
 
         while not self.done:
             active_objects = [self.state.player, self.state.ball]
 
-            dt = self.clock.tick(self.fps)
+            dt = self.clock.tick(fps)
             self.event_loop()
             self.update(dt)
             self.draw()
