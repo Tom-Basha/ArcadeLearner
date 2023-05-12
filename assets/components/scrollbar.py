@@ -65,11 +65,12 @@ class Scrollbar:
         self.scroll_offset = min(max(self.scroll_offset, self.min_offset), self.max_offset)
 
     def update_scroll_offset(self):
-        ratio = (self.scrollbar_position - self.top_margin) / (self.bottom_margin - self.scrollbar_height)
+        ratio = (self.scrollbar_position - self.top_margin) / (
+                    self.bottom_margin - self.scrollbar_height - self.top_margin)
         self.scroll_offset = self.max_offset + ratio * (self.min_offset - self.max_offset)
 
     def update_scrollbar_position(self):
         ratio = (self.scroll_offset - self.max_offset) / (self.min_offset - self.max_offset)
         self.scrollbar_position = self.top_margin + ratio * (
-                    self.bottom_margin - self.scrollbar_height - self.top_margin)
+                    self.bottom_margin - self.top_margin - self.scrollbar_height)
         self.scrollbar_rect.y = self.scrollbar_position

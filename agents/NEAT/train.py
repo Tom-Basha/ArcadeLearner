@@ -19,8 +19,9 @@ def set_fitness(genome, score, duration):
 
 
 class Trainer:
-    def __init__(self, game_name, game_path, inputs, outputs, threshold=350, population=50, generations=1000,
-                 start_gen=-1):
+    def __init__(self, game_name, game_path, inputs, outputs, threshold=350, population=100, generations=1000,
+                 start_gen=-1, num_hidden=3):
+        self.num_hidden = num_hidden
         self.generations = generations
         self.config_path = "..\\agents\\NEAT\\config.txt"
         self.game_h = None
@@ -302,8 +303,8 @@ class Trainer:
         return data, input_arr
 
     def update_config(self):
-        attributes = ['fitness_threshold', 'pop_size', 'num_outputs', 'num_inputs']
-        values = [self.threshold, self.population, len(self.outputs) + 1, self.test_inputs()]
+        attributes = ['fitness_threshold', 'pop_size', 'num_outputs', 'num_inputs', 'num_hidden']
+        values = [self.threshold, self.population, len(self.outputs) + 1, self.test_inputs(), self.num_hidden]
 
         with open(self.config_path, 'r') as file:
             config_lines = file.readlines()

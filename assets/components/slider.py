@@ -24,7 +24,7 @@ class Slider:
         self.dragging = False
 
         # Set the initial position of the slider based on the current value
-        if curr_value != -2:
+        if curr_value != -1:
             self.slider_pos = max(self.x, min(self.x + (self.width - self.slider_width) * self.value / self.max_val, self.x + self.width - self.slider_width))
 
     def draw(self, screen):

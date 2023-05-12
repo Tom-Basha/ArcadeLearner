@@ -1,17 +1,14 @@
-import pygame
-
-from assets.paths import *
 from assets.utils import *
 
 
 class Button:
     def __init__(self, pos, text, font, color, hover_color=None, outline=False, bg=paths.BUTTON_BG):
-        self.image = pg.image.load(bg) if bg != False else None
+        self.image = pg.image.load(bg) if bg is not False else None
         self.x_pos = pos[0]
         self.y_pos = pos[1]
         self.font = font
         self.base_color = color
-        self.hovering_color = hover_color if hover_color != None else color
+        self.hovering_color = hover_color if hover_color is not None else color
         self.text_input = text
         self.text = self.font.render(self.text_input, True, self.base_color)
         if self.image is None:
@@ -20,7 +17,7 @@ class Button:
         self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
         if outline:
             self.outline = font.render(text, True, BLACK)
-            self.outline_pos = (self.text_rect.x + 2, self.text_rect.y + 3)
+            self.outline_pos = (self.text_rect.x + 1, self.text_rect.y + 3)
         else:
             self.outline = None
 
@@ -51,7 +48,7 @@ def back_btn(text="RETURN"):
 
 
 def manu_btn(text, pos):
-    return Button(pos, text, get_font(25), WHITE, "#f0000f", outline=True)
+    return Button(pos, text, get_font(25), WHITE, "#D00000", outline=True)
 
 
 # auto games buttons

@@ -171,12 +171,16 @@ def key_selection(keys):
     HEADER, HEADER_RECT = header("CONTROLS")
     SUBHEAD, SUBHEAD_RECT = subhead("SELECT THE RELEVANT KEYS FOR YOUR GAME", 16)
 
+    BACK_BTN = back_btn()
+
     # Start the main game loop
     while True:
+        SCREEN.blit(BG, (0, 0))
+
         MENU_MOUSE_POS = pg.mouse.get_pos()
 
-        BACK_BTN = back_btn()
         BACK_BTN.change_color(MENU_MOUSE_POS)
+        BACK_BTN.update(SCREEN)
 
         # Handle events
         for event in pygame.event.get():
@@ -190,9 +194,7 @@ def key_selection(keys):
                     return clicked_keys
 
         # Draw the keyboard and update the display
-        SCREEN.blit(BG, (0, 0))
 
-        BACK_BTN.update(SCREEN)
         SCREEN.blit(HEADER, HEADER_RECT)
         SCREEN.blit(SUBHEAD, SUBHEAD_RECT)
 
