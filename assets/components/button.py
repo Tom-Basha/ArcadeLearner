@@ -3,7 +3,7 @@ from assets.utils import *
 
 class Button:
     def __init__(self, pos, text, font, color, hover_color=None, outline=False, bg=paths.BUTTON_BG):
-        self.image = pg.image.load(bg) if bg is not False else None
+        self.image = pygame.image.load(bg) if bg is not False else None
         self.x_pos = pos[0]
         self.y_pos = pos[1]
         self.font = font

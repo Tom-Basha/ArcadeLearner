@@ -22,7 +22,7 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
-fps = 60
+fps = 0
 
 
 class Bird(pygame.sprite.Sprite):
@@ -44,7 +44,7 @@ class Bird(pygame.sprite.Sprite):
         self.rect.y -= self.velocity
 
     def flap(self):
-        self.velocity = +10
+        self.velocity = 10
 
 
 class Pillar(pygame.sprite.Sprite):

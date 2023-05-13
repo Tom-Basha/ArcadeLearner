@@ -1,3 +1,7 @@
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import subprocess
 import sys
 import key_selection as ks
@@ -21,9 +25,9 @@ def selected_game(game, path):
     game_path = path
     selected_keys = keys_extractor(game_path)
 
-    threshold = 350
+    threshold = 250
     population = 50
-    generations = 1000
+    generations = 10000
     start_gen = -1
     hidden_layers = 3
 
@@ -43,21 +47,21 @@ def selected_game(game, path):
     selected_attributes = match_attributes(game_attributes)
 
     while True:
-        pg.display.set_caption(game)
+        pygame.display.set_caption(game)
         screen.blit(BACKGROUND, (0, 0))
         screen.blit(HEADER, HEADER_RECT)
 
-        MENU_MOUSE_POS = pg.mouse.get_pos()
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
 
         for button in buttons:
             button.change_color(MENU_MOUSE_POS)
             button.update(screen)
 
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
                 sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if PLAY_BTN.check_input(MENU_MOUSE_POS):
                     subprocess.run(["python", game_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 
@@ -70,7 +74,7 @@ def selected_game(game, path):
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
                     print(
                         f"\nSetting up training for {game}.\nSelected keys: {selected_keys}\nSelected attributes: {selected_attributes}")
-                    trainer = Trainer(game, path, selected_attributes, selected_keys, threshold, population, generations, start_gen, hidden_layers)
+                    trainer = Trainer(game, path, selected_attributes, selected_keys, threshold, generations, population, start_gen, hidden_layers)
                     trainer.neat_setup()
 
                 if CONTROLS_BTN.check_input(MENU_MOUSE_POS):
@@ -80,10 +84,9 @@ def selected_game(game, path):
                     selected_attributes = attribute_selection(game_attributes, selected_attributes)
 
                 if SETTINGS.check_input(MENU_MOUSE_POS):
-                    threshold, population, generations, start_gen, hidden_layers = train_setting(game, threshold, population, generations, start_gen, hidden_layers)
-                    print(threshold, population, generations, start_gen, hidden_layers)
+                    threshold, generations, population, start_gen, hidden_layers = train_setting(game, threshold, generations, population, start_gen, hidden_layers)
 
                 if BACK.check_input(MENU_MOUSE_POS):
                     return
 
-        pg.display.update()
+        pygame.display.update()

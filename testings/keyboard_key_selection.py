@@ -171,7 +171,7 @@ def key_selection(keys):
 
     # Start the main game loop
     while True:
-        MENU_MOUSE_POS = pg.mouse.get_pos()
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
 
         BACK_BTN = back_btn()
         BACK_BTN.change_color(MENU_MOUSE_POS)

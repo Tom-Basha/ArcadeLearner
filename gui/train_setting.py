@@ -1,4 +1,6 @@
-import pygame
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 from assets.components.button import back_btn
 from assets.components.scrollbar import Scrollbar
@@ -9,15 +11,15 @@ from assets.components.slider import Slider
 BACKGROUND = pygame.image.load(BACKGROUND_IMAGE)
 BACKGROUND_COVER = pygame.image.load(SCROLLBAR_BG)
 
-DEFAULT_THRESHOLD = 350
+DEFAULT_THRESHOLD = 300
 DEFAULT_POPULATION = 100
-DEFAULT_GENERATIONS = 1000
+DEFAULT_GENERATIONS = 10000
 DEFAULT_START_GEN = -1
 DEFAULT_HIDDEN_LAYERS = 3
 
 
 class Settings:
-    def __init__(self, game_name, fitness=250, generations=1000, population=50, start_cp=-1, hidden_layers=3):
+    def __init__(self, game_name, fitness, generations, population, start_cp, hidden_layers):
         pygame.init()
         self.cps_path = f"..\\agents\\NEAT\\cps\\{game_name}"
         # Screen creation
@@ -37,14 +39,15 @@ class Settings:
             ("Fitness Threshold", "Recommended: 250 - 350",
              Slider(self.slider_x, self.top_margin + 0 * (self.item_height + self.items_spacing), 500, 100, 1000, 50,
                     fitness)),
-            ("Generations", "Recommended: 1000",
-             Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 1000, 50,
+            ("Generations", "Recommended: 10000",
+             Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 10000, 50,
                     generations)),
             ("Population", "Recommended: 50",
-             Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 20, 100, 5,
+             Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 20, 150, 5,
                     population)),
             ("Start Checkpoint", "Set to -1 for a new training",
-             Slider(self.slider_x, self.top_margin + 3 * (self.item_height + self.items_spacing), 500, -1, self.cps_count(), 1,
+             Slider(self.slider_x, self.top_margin + 3 * (self.item_height + self.items_spacing), 500, -1,
+                    self.cps_count(), 1,
                     start_cp)),
             ("Neural Network Hidden Layers", "Recommended: 2 - 3",
              Slider(self.slider_x, self.top_margin + 4 * (self.item_height + self.items_spacing), 500, 1, 5, 1,
@@ -77,7 +80,6 @@ class Settings:
                 if filename.startswith("train_checkpoint_") and os.path.isfile(os.path.join(self.cps_path, filename)):
                     count += 1
         return count
-
 
     def draw_item(self, item, sub_item, y, slider):
         # Set the dimensions and position of the rectangle
@@ -153,7 +155,6 @@ def train_setting(game_name, threshold, population, generations, start_gen, hidd
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Check if the mouse is over the button
                 if BACK_BTN.check_input(MENU_MOUSE_POS):
-                    # print(self.values)
                     return settings.values[0], settings.values[1], settings.values[2], settings.values[3], \
                         settings.values[4]
             settings.scrollbar.handle_event(event)

@@ -4,7 +4,6 @@ import shutil
 import socket
 import subprocess
 import numpy as np
-import pygame
 import neat
 import time
 
@@ -19,11 +18,14 @@ def set_fitness(genome, score, duration):
 
 
 class Trainer:
-    def __init__(self, game_name, game_path, inputs, outputs, threshold=350, population=100, generations=1000,
-                 start_gen=-1, num_hidden=3):
+    def __init__(self, game_name, game_path, inputs, outputs, threshold, generations, population,
+                 start_gen, num_hidden):
         self.num_hidden = num_hidden
         self.generations = generations
-        self.config_path = "..\\agents\\NEAT\\config.txt"
+        if start_gen != -1:
+            self.config_path = f"..\\agents\\NEAT\\cps\\{game_name}\\config.txt"
+        else:
+            self.config_path = "..\\agents\\NEAT\\config.txt"
         self.game_h = None
         self.game_w = None
         self.start_gen = start_gen
@@ -88,7 +90,7 @@ class Trainer:
                 data, input_arr = self.organize_data(data)
 
                 self.update_buttons()
-                mouse_pos = pg.mouse.get_pos()
+                mouse_pos = pygame.mouse.get_pos()
                 if self.handle_training_events(mouse_pos, genome):
                     break
 
@@ -110,7 +112,8 @@ class Trainer:
             genome.fitness = -30
 
         set_fitness(genome, self.score, self.duration)
-        print(f"{genome.key}.\t\t Fitness: {round(genome.fitness, 3)}\t|\t Duration: {self.duration}\t|\t Score: {self.score}")
+        print(
+            f"{genome.key}.\t\t Fitness: {round(genome.fitness, 3)}\t|\t Duration: {self.duration}\t|\t Score: {self.score}")
 
         self.last_gemone = {"key": genome.key, "fitness": round(genome.fitness, 3), "time": self.duration,
                             "score": self.score}
@@ -185,7 +188,7 @@ class Trainer:
             while self.pause_training:
                 if self.quit_training:
                     break
-                mouse_pos = pg.mouse.get_pos()
+                mouse_pos = pygame.mouse.get_pos()
                 if self.handle_training_events(mouse_pos, genome):
                     break
                 if self.last_gemone is None:
@@ -200,7 +203,7 @@ class Trainer:
                 training_btn((640, 635), "Return")
             ]
             while not self.quit_training:
-                mouse_pos = pg.mouse.get_pos()
+                mouse_pos = pygame.mouse.get_pos()
                 if self.handle_training_events(mouse_pos, self.last_gemone):
                     break
                 self.info(self.last_gemone_obj)
@@ -211,7 +214,7 @@ class Trainer:
         if self.start_gen == -1:
             p = neat.Population(config)
         else:
-            checkpoint_file = '..\\agents\\NEAT\\cps\\' + self.game_name + '\\train_checkpoint_' + str(self.start_gen)
+            checkpoint_file = f"..\\agents\\NEAT\\cps\\{self.game_name}\\train_checkpoint_{str(self.start_gen)}"
             p = neat.checkpoint.Checkpointer.restore_checkpoint(checkpoint_file)
 
         p.add_reporter(neat.StdOutReporter(True))
@@ -223,7 +226,7 @@ class Trainer:
             except OSError as error:
                 print("Directory creation failed: ", error)
 
-        cp_prefix = cps_path + "\\train_checkpoint_"
+        cp_prefix = f"{cps_path}\\train_checkpoint_"
         checkpointer = neat.Checkpointer(generation_interval=1, filename_prefix=cp_prefix)
 
         p.add_reporter(stats)
@@ -231,25 +234,32 @@ class Trainer:
 
         try:
             winner = p.run(self.genomes_eval, self.generations)
-            with open(cps_path + "\\trained_ai", "wb") as f:
+            with open(f"{cps_path}\\trained_ai", "wb") as f:
                 pickle.dump(winner, f)
         except TypeError:
             winner = self.best_genome_obj
-            with open(cps_path + "\\unfinished_best_genome", "wb") as f:
+            with open(f"{cps_path}\\unfinished_best_genome", "wb") as f:
                 pickle.dump(winner, f)
 
         # Copy config with train setting
         destination_file = os.path.join(cps_path, 'config.txt')
         os.makedirs(cps_path, exist_ok=True)
-        shutil.copy(self.config_path, destination_file)
+        if self.start_gen == -1:
+            shutil.copy(self.config_path, destination_file)
 
     def neat_setup(self):
-        self.update_config()
+        if self.start_gen == -1:
+            self.update_config()
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                              neat.DefaultSpeciesSet, neat.DefaultStagnation,
                              self.config_path)
 
+        if self.start_gen != -1:
+            self.total_genomes = self.start_gen * config.pop_size
+            self.threshold = config.fitness_threshold
+            self.population = config.pop_size
         self.run_neat(config)
+
         return
 
     def add_essentials(self):
@@ -275,7 +285,7 @@ class Trainer:
         data = client_socket.recv(4096)
         data, input_arr = self.organize_data(data)
 
-        print("\nData example:", data, "\nInputs example:", input_arr, "\nInput length:", len(input_arr))
+        print(f"\nData example: {data}\nInputs example: {input_arr}\nInput length: {len(input_arr)}")
         self.socket.close()
 
         return len(input_arr)
@@ -336,7 +346,7 @@ class Trainer:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return True
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.buttons[0].check_input(mouse_pos):
                     if self.buttons[0].text_input == "Next Genome":
                         return True
@@ -363,7 +373,6 @@ class Trainer:
                             return True
                 if len(self.buttons) == 3:
                     if self.buttons[2].check_input(mouse_pos):
-
                         self.pause_training = True
                         self.quit_training = True
                         return True
@@ -411,10 +420,10 @@ class Trainer:
         self.update_buttons()
 
     def update_buttons(self):
-        mouse_pos = pg.mouse.get_pos()
+        mouse_pos = pygame.mouse.get_pos()
 
         for button in self.buttons:
             button.change_color(mouse_pos)
             button.update(self.screen)
 
-        pg.display.update()
+        pygame.display.update()

@@ -1,6 +1,8 @@
-import math
-import pygame
+import os
 
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
+import math
 from assets.components.button import back_btn
 from assets.paths import BACKGROUND_IMAGE
 from assets.components.scrollbar import Scrollbar
@@ -92,7 +94,6 @@ def attribute_selection(game_classes, selected_attributes):
     global text_rects
     clock = pygame.time.Clock()
     game_attributes = game_classes[0][1]
-    print(game_attributes)
     selected_items = set() if selected_attributes == 0 else selected_attributes
 
     HEADER, HEADER_RECT = header("ATTRIBUTES")

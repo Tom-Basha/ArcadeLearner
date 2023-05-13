@@ -1,3 +1,7 @@
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import pygame.gfxdraw
 from assets.components.button import *
 from assets.paths import *
@@ -145,7 +149,7 @@ class KeySelection:
                     clicked_keys.add(key)
                 # Print the selected keys
                 if len(clicked_keys) == 0:
-                    print('{}')
+                    print('Selected keys: {}')
                 else:
                     print("Selected keys: ", clicked_keys)
                     print("Selected keys amount: ", len(clicked_keys))
@@ -177,7 +181,7 @@ def key_selection(keys):
     while True:
         SCREEN.blit(BG, (0, 0))
 
-        MENU_MOUSE_POS = pg.mouse.get_pos()
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
 
         BACK_BTN.change_color(MENU_MOUSE_POS)
         BACK_BTN.update(SCREEN)

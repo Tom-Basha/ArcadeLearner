@@ -1,7 +1,7 @@
-import pygame as pg
+import pygame
 from assets import paths
 
-pg.font.init()
+pygame.font.init()
 
 # Colors Presets
 MAIN_CLR = "#b68f40"
@@ -19,7 +19,7 @@ SCREEN_H = 720
 
 # Set up font
 def get_font(size, font=paths.MAIN_FONT):
-    return pg.font.Font(font, size)
+    return pygame.font.Font(font, size)
 
 
 # Labels presets
@@ -47,7 +47,7 @@ def attribute_header(text, color, pos, size):
 
 
 def train_info(text, pos, alignment="center", size=40):
-    font = pg.font.Font(paths.TRAIN_FONT, size)
+    font = pygame.font.Font(paths.TRAIN_FONT, size)
     label = font.render(text, True, WHITE)
     rect = label.get_rect()
     setattr(rect, alignment, pos)

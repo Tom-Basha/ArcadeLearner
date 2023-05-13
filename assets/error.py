@@ -39,8 +39,8 @@ def error_msg(message_lines):
     # Wait for a mouse click or keyboard click
     while True:
         for event in pygame.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
+            if event.type == pygame.QUIT:
+                pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return
