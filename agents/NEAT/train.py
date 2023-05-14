@@ -443,12 +443,10 @@ class Trainer:
         pygame.display.update()
 
     def save_data(self, cps_path):
-        print(self.core_inputs)
-        print(self.inputs)
         data = {
             "population": self.population,
             "generations": self.generations,
-            "inputs": self.core_inputs,
+            "inputs": self.inputs,
             "outputs": self.outputs,
             "threshold": self.threshold
         }
