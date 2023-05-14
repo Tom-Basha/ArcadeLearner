@@ -10,9 +10,9 @@ import pygame
 
 class AI_Player:
     def __init__(self, game_name, game_path, inputs, outputs):
-        self.config_path = "..\\agents\\NEAT\\cps\\" + game_name + "\\config.txt"
-        self.player = "..\\agents\\NEAT\\cps\\" + game_name + "\\trained_ai"
-        self.player_unfinished = "..\\agents\\NEAT\\cps\\" + game_name + "\\unfinished_best_genome"
+        self.config_path = "..\\agents\\NEAT\\games\\" + game_name + "\\config.txt"
+        self.player = "..\\agents\\NEAT\\games\\" + game_name + "\\trained_ai"
+        self.player_unfinished = "..\\agents\\NEAT\\games\\" + game_name + "\\unfinished_best_genome"
         self.game_name = game_name
         self.game_path = game_path
         self.inputs = inputs

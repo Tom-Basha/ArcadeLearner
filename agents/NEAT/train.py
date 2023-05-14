@@ -1,3 +1,4 @@
+import json
 import os
 import pickle
 import shutil
@@ -13,21 +14,11 @@ from assets.utils import *
 pygame.init()
 
 
-def set_fitness(genome, score, duration):
-    genome.fitness += score + duration / 2
-
-
 class Trainer:
     def __init__(self, game_name, game_path, inputs, outputs, threshold, generations, population,
                  start_gen, num_hidden):
-        self.num_hidden = num_hidden
+        self.hidden_layers = num_hidden
         self.generations = generations
-        if start_gen != -1:
-            self.config_path = f"..\\agents\\NEAT\\cps\\{game_name}\\config.txt"
-        else:
-            self.config_path = "..\\agents\\NEAT\\config.txt"
-        self.game_h = None
-        self.game_w = None
         self.start_gen = start_gen
         self.population = population
         self.threshold = threshold
@@ -35,13 +26,23 @@ class Trainer:
         self.game_path = game_path
         self.inputs = inputs
         self.outputs = list(outputs)
+
+        if start_gen != -1:
+            self.config_path = f"..\\agents\\NEAT\\games\\{game_name}\\config.txt"
+        else:
+            self.config_path = "..\\agents\\NEAT\\config.txt"
+            self.add_essentials()
+
+        self.game_h = None
+        self.game_w = None
+
         self.socket = None
         self.player_frame = [0, 0, 0, 0]
         self.prev_player_frame = [0, 0, 0, 0]
-        self.add_essentials()
 
         self.score = 0
         self.duration = 0
+        self.penalty = 0
 
         self.quit_training = False
         self.pause_training = False
@@ -79,6 +80,7 @@ class Trainer:
         client_socket.sendall(pickle.dumps(self.inputs))
 
         self.score = 0
+        self.penalty = 0
         start_time = time.time()
 
         game_w = 1280
@@ -98,6 +100,9 @@ class Trainer:
                 client_socket.sendall(pickle.dumps(move))
                 self.frame_penalty(game_w, game_h, genome)
 
+                self.duration = round(time.time() - start_time, 3)
+                self.update_fitness(genome)
+
                 if genome.fitness >= self.threshold:
                     break
             else:
@@ -105,13 +110,13 @@ class Trainer:
 
         self.duration = round(time.time() - start_time, 3)
         if self.duration < 5 and self.score <= 10:
-            genome.fitness = -20
+            self.penalty += 20
         elif self.score <= 5:
-            genome.fitness = -5
+            self.penalty += 5
         elif self.duration < 2:
-            genome.fitness = -30
+            self.penalty += 30
 
-        set_fitness(genome, self.score, self.duration)
+        self.update_fitness(genome)
         print(
             f"{genome.key}.\t\t Fitness: {round(genome.fitness, 3)}\t|\t Duration: {self.duration}\t|\t Score: {self.score}")
 
@@ -124,6 +129,9 @@ class Trainer:
         self.last_five_genomes.append(self.last_gemone)
 
         return False
+
+    def update_fitness(self, genome):
+        genome.fitness = self.score + self.duration / 2 - self.penalty
 
     def set_player_frame(self, s):
         name, value = s[0], eval(s[1])
@@ -144,7 +152,7 @@ class Trainer:
         output = net.activate(values)
         decision = output.index(max(output))
         if decision == 0:
-            genome.fitness -= 0.001
+            self.penalty += 0.001
             return 0
         else:
             decision -= 1
@@ -152,13 +160,13 @@ class Trainer:
 
     def frame_penalty(self, w, h, genome):
         if self.player_frame[0] == 0:
-            genome.fitness -= 0.01
+            self.penalty += 0.01
         if self.player_frame[1] == 0:
-            genome.fitness -= 0.01
+            self.penalty += 0.01
         if self.player_frame[2] == w:
-            genome.fitness -= 0.01
+            self.penalty += 0.01
         if self.player_frame[3] == h:
-            genome.fitness -= 0.01
+            self.penalty += 0.01
 
         moved = False
         for i in range(len(self.player_frame)):
@@ -166,7 +174,7 @@ class Trainer:
                 moved = True
 
         if not moved:
-            genome.fitness -= 0.01
+            self.penalty += 0.01
 
         self.prev_player_frame = self.player_frame.copy()
 
@@ -211,22 +219,27 @@ class Trainer:
         self.socket.close()
 
     def run_neat(self, config):
+        game_files = f"..\\agents\\NEAT\\games\\{self.game_name}"
+        cps_path = f"..\\agents\\NEAT\\games\\{self.game_name}\\checkpoints"
+        cp_prefix = f"{cps_path}\\train_checkpoint_"
+
         if self.start_gen == -1:
             p = neat.Population(config)
+            if os.path.exists(cps_path):
+                shutil.rmtree(cps_path)
         else:
-            checkpoint_file = f"..\\agents\\NEAT\\cps\\{self.game_name}\\train_checkpoint_{str(self.start_gen)}"
+            checkpoint_file = f"{cp_prefix}{self.start_gen}"
             p = neat.checkpoint.Checkpointer.restore_checkpoint(checkpoint_file)
 
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
-        cps_path = "..\\agents\\NEAT\\cps\\" + self.game_name
+
         if not os.path.exists(cps_path):
             try:
-                os.mkdir(cps_path)
+                os.makedirs(cps_path, exist_ok=True)
             except OSError as error:
                 print("Directory creation failed: ", error)
 
-        cp_prefix = f"{cps_path}\\train_checkpoint_"
         checkpointer = neat.Checkpointer(generation_interval=1, filename_prefix=cp_prefix)
 
         p.add_reporter(stats)
@@ -234,30 +247,31 @@ class Trainer:
 
         try:
             winner = p.run(self.genomes_eval, self.generations)
-            with open(f"{cps_path}\\trained_ai", "wb") as f:
+            with open(f"{game_files}\\trained_ai", "wb") as f:
                 pickle.dump(winner, f)
         except TypeError:
             winner = self.best_genome_obj
-            with open(f"{cps_path}\\unfinished_best_genome", "wb") as f:
+            with open(f"{game_files}\\unfinished_best_genome", "wb") as f:
                 pickle.dump(winner, f)
 
+        self.save_data(game_files)
+
         # Copy config with train setting
-        destination_file = os.path.join(cps_path, 'config.txt')
-        os.makedirs(cps_path, exist_ok=True)
+        os.makedirs(game_files, exist_ok=True)
         if self.start_gen == -1:
+            destination_file = os.path.join(game_files, 'config.txt')
             shutil.copy(self.config_path, destination_file)
 
     def neat_setup(self):
         if self.start_gen == -1:
             self.update_config()
+        print(self.config_path)
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                              neat.DefaultSpeciesSet, neat.DefaultStagnation,
                              self.config_path)
 
         if self.start_gen != -1:
-            self.total_genomes = self.start_gen * config.pop_size
-            self.threshold = config.fitness_threshold
-            self.population = config.pop_size
+            self.total_genomes = self.start_gen * self.population
         self.run_neat(config)
 
         return
@@ -314,7 +328,7 @@ class Trainer:
 
     def update_config(self):
         attributes = ['fitness_threshold', 'pop_size', 'num_outputs', 'num_inputs', 'num_hidden']
-        values = [self.threshold, self.population, len(self.outputs) + 1, self.test_inputs(), self.num_hidden]
+        values = [self.threshold, self.population, len(self.outputs) + 1, self.test_inputs(), self.hidden_layers]
 
         with open(self.config_path, 'r') as file:
             config_lines = file.readlines()
@@ -427,3 +441,19 @@ class Trainer:
             button.update(self.screen)
 
         pygame.display.update()
+
+    def save_data(self, cps_path):
+        print(self.core_inputs)
+        print(self.inputs)
+        data = {
+            "population": self.population,
+            "generations": self.generations,
+            "inputs": self.core_inputs,
+            "outputs": self.outputs,
+            "threshold": self.threshold
+        }
+
+        path = f"{cps_path}\\data.json"
+
+        with open(path, "w") as json_file:
+            json.dump(data, json_file)

@@ -22,7 +22,7 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
-fps = 0
+fps = 80
 
 
 class Bird(pygame.sprite.Sprite):
@@ -87,11 +87,6 @@ def pillar_collision(bird, pillars):
                 bird.rect.colliderect(pillar.bottom_rect.move(pillar.rect.topleft)):
             return True
     return False
-
-
-# def create_background():
-#     bg_objects = []
-#     bg_objects.append(pygame.Rect((0, 500, 800, 100),
 
 
 def main():

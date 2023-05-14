@@ -21,7 +21,7 @@ DEFAULT_HIDDEN_LAYERS = 3
 class Settings:
     def __init__(self, game_name, fitness, generations, population, start_cp, hidden_layers):
         pygame.init()
-        self.cps_path = f"..\\agents\\NEAT\\cps\\{game_name}"
+        self.cps_path = f"..\\agents\\NEAT\\games\\{game_name}\\checkpoints"
         # Screen creation
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Training Settings")
@@ -36,24 +36,24 @@ class Settings:
         self.slider_x = SCREEN_W // 2 - 250
         # Items
         self.items = [
+            ("Start Checkpoint", "Set to -1 for a new training",
+             Slider(self.slider_x, self.top_margin + 3 * (self.item_height + self.items_spacing), 500, -1,
+                    self.cps_count(), 1,
+                    start_cp)),
             ("Fitness Threshold", "Recommended: 250 - 350",
-             Slider(self.slider_x, self.top_margin + 0 * (self.item_height + self.items_spacing), 500, 100, 1000, 50,
+             Slider(self.slider_x, self.top_margin + 0 * (self.item_height + self.items_spacing), 500, 50, 1000, 50,
                     fitness)),
             ("Generations", "Recommended: 10000",
              Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 10000, 50,
                     generations)),
             ("Population", "Recommended: 50",
-             Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 20, 150, 5,
+             Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 10, 200, 5,
                     population)),
-            ("Start Checkpoint", "Set to -1 for a new training",
-             Slider(self.slider_x, self.top_margin + 3 * (self.item_height + self.items_spacing), 500, -1,
-                    self.cps_count(), 1,
-                    start_cp)),
             ("Neural Network Hidden Layers", "Recommended: 2 - 3",
              Slider(self.slider_x, self.top_margin + 4 * (self.item_height + self.items_spacing), 500, 1, 5, 1,
                     hidden_layers))
         ]
-        self.values = [fitness, generations, population, start_cp, hidden_layers]
+        self.values = [start_cp, fitness, generations, population, hidden_layers]
 
         self.num_items = len(self.items)
         # Sliders

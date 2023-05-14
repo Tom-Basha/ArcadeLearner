@@ -14,6 +14,7 @@ SCREEN = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("Menu")
 BACKGROUND = pygame.image.load(BACKGROUND_IMAGE)
 
+
 def main_menu():
     games_list = games_extractor()
     buttons = games_buttons(games_list)

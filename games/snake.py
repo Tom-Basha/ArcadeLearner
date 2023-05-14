@@ -120,10 +120,15 @@ def draw_score(screen, score):
 
 def main():
     global fps
+    print("!@$!")
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connected = False
+    print("!@$!")
+
     try:
         s.connect(('localhost', 8888))
+
         instructions = pickle.loads(s.recv(4096))
         connected = True
         fps = 0

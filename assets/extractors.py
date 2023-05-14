@@ -55,9 +55,9 @@ def attribute_extractor(file_path):
                                             while isinstance(target.value, ast.Attribute):
                                                 target = target.value
                                                 attr = target.attr + "." + attr
-                                            if attr == "rect":
-                                                attr = "rect.center"
-                                            if attr not in ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'score'] or attr not in class_features[class_name]:
+                                            if attr == 'rect':
+                                                attr = 'rect.center'
+                                            if attr not in ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'score'] and attr not in class_features[class_name]:
                                                 class_features[class_name].append(attr)
     return [(class_name, attrs) for class_name, attrs in class_features.items()]
 

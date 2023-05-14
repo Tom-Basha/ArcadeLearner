@@ -75,6 +75,7 @@ class Ball:
     def reset(self):
         self.rect.x = size[0] // 2
         self.rect.y = (size[1] - 30) // 2
+        self.curr_speed -= 1
         self.speed = [-speed for speed in self.speed]
 
 
@@ -120,7 +121,7 @@ def update(player, ball):
 def handle_collision(ball, player, opponent):
     if ball.rect.colliderect(player.rect):
         ball.hits += 1
-        if ball.hits % 5 == 0:
+        if ball.hits % 10 == 0:
             ball.curr_speed += 1
         if player.rect.top < ball.rect.centery < player.rect.bottom:
             # The ball hit the side of the paddle
@@ -139,7 +140,7 @@ def handle_collision(ball, player, opponent):
 
     if ball.rect.colliderect(opponent.rect):
         ball.hits += 1
-        if ball.hits % 5 == 0:
+        if ball.hits % 10 == 0:
             ball.curr_speed += 1
         if opponent.rect.top < ball.rect.centery < opponent.rect.bottom:
             # The ball hit the side of the paddle
@@ -184,7 +185,7 @@ def main():
 
     ball = Ball((255, 255, 255), 350, 250, 10)
     player = Player((255, 255, 255), 650, 250, 10, 60, 7)
-    opponent = Opponent((255, 255, 255), 40, 250, 10, 60, 5)
+    opponent = Opponent((255, 255, 255), 40, 250, 10, 60, 4)
 
     entities = [player, opponent, ball]
 

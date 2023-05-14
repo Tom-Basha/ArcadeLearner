@@ -72,8 +72,21 @@ def selected_game(game, path):
                         error_msg(['Trained AI was not found.', 'Make sure to train your AI first.'])
 
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
-                    print(
-                        f"\nSetting up training for {game}.\nSelected keys: {selected_keys}\nSelected attributes: {selected_attributes}")
+                    if start_gen != -1:
+                        data_path = f"..\\agents\\NEAT\\games\\{game}\\data.json"
+                        with open(data_path, "r") as json_file:
+                            data = json.load(json_file)
+                        selected_attributes = data["inputs"]
+                        selected_keys = data["outputs"]
+                        threshold = data["threshold"]
+                        generations = data["generations"]
+                        population = data["population"]
+                        print(
+                            f"\nContinue training for {game}.\nLoaded keys: {selected_keys}\nLoaded attributes: {selected_attributes}")
+                    else:
+                        print(
+                            f"\nSetting up training for {game}.\nSelected keys: {selected_keys}\nSelected attributes: {selected_attributes}")
+                    print("Att", selected_attributes)
                     trainer = Trainer(game, path, selected_attributes, selected_keys, threshold, generations, population, start_gen, hidden_layers)
                     trainer.neat_setup()
 
@@ -84,7 +97,7 @@ def selected_game(game, path):
                     selected_attributes = attribute_selection(game_attributes, selected_attributes)
 
                 if SETTINGS.check_input(MENU_MOUSE_POS):
-                    threshold, generations, population, start_gen, hidden_layers = train_setting(game, threshold, generations, population, start_gen, hidden_layers)
+                    start_gen, threshold, generations, population, hidden_layers = train_setting(game, threshold, generations, population, start_gen, hidden_layers)
 
                 if BACK.check_input(MENU_MOUSE_POS):
                     return
