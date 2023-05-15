@@ -185,7 +185,7 @@ def main():
 
     ball = Ball((255, 255, 255), 350, 250, 10)
     player = Player((255, 255, 255), 650, 250, 10, 60, 7)
-    opponent = Opponent((255, 255, 255), 40, 250, 10, 60, 4)
+    opponent = Opponent((255, 255, 255), 40, 250, 10, 60, 5)
 
     entities = [player, opponent, ball]
 
