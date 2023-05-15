@@ -284,7 +284,8 @@ class Trainer:
 
         # Add attributes to the key accessed by index
         for index, attribute in enumerate(essentials):
-            self.inputs[player_key].insert(index + 1, attribute)
+            if attribute not in self.inputs[player_key]:
+                self.inputs[player_key].insert(index + 1, attribute)
 
     def test_inputs(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

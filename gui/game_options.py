@@ -4,13 +4,10 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import subprocess
 import sys
-import key_selection as ks
 from agents.NEAT.train import Trainer
 from agents.NEAT.watch_ai import AI_Player
-from assets.components.button import *
 from assets.error import error_msg
 from assets.extractors import *
-from attribute_selection import *
 from train_setting import *
 
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
@@ -36,12 +33,11 @@ def selected_game(game, path):
     PLAY_BTN = manu_btn("Play", (270, 280))
     WATCH_BTN = manu_btn("Watch AI", (640, 280))
     TRAIN_BTN = manu_btn("Train AI", (1010, 280))
-    CONTROLS_BTN = manu_btn("Controls", (270, 440))
-    ATTRIBUTES_BTN = manu_btn("Attributes", (640, 440))
-    SETTINGS = manu_btn("Settings", (1010, 440))
+    SETTINGS = manu_btn("Settings", (SCREEN_W // 2 - 185, 440))
+    TEST_AI = manu_btn("Test AI", (SCREEN_W // 2 + 185, 440))
     BACK = back_btn()
 
-    buttons = [PLAY_BTN, WATCH_BTN, TRAIN_BTN, CONTROLS_BTN, ATTRIBUTES_BTN, BACK, SETTINGS]
+    buttons = [PLAY_BTN, WATCH_BTN, TRAIN_BTN, TEST_AI, BACK, SETTINGS]
 
     game_attributes = attribute_extractor(game_path)
     selected_attributes = match_attributes(game_attributes)
@@ -66,10 +62,12 @@ def selected_game(game, path):
                     subprocess.run(["python", game_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 
                 if WATCH_BTN.check_input(MENU_MOUSE_POS):
-                    ai_player = AI_Player(game, path, selected_attributes, selected_keys)
+                    ai_player = AI_Player(game, path)
                     trained = ai_player.neat_setup()
                     if not trained:
                         error_msg(['Trained AI was not found.', 'Make sure to train your AI first.'])
+                    else:
+                        ai_player.play()
 
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
                     if start_gen != -1:
@@ -86,18 +84,20 @@ def selected_game(game, path):
                     else:
                         print(
                             f"\nSetting up training for {game}.\nSelected keys: {selected_keys}\nSelected attributes: {selected_attributes}")
-                    print("Att", selected_attributes)
-                    trainer = Trainer(game, path, selected_attributes, selected_keys, threshold, generations, population, start_gen, hidden_layers)
+                    trainer = Trainer(game, path, selected_attributes, selected_keys, threshold, generations,
+                                      population, start_gen, hidden_layers)
                     trainer.neat_setup()
 
-                if CONTROLS_BTN.check_input(MENU_MOUSE_POS):
-                    selected_keys = ks.key_selection(selected_keys)
-
-                if ATTRIBUTES_BTN.check_input(MENU_MOUSE_POS):
-                    selected_attributes = attribute_selection(game_attributes, selected_attributes)
-
                 if SETTINGS.check_input(MENU_MOUSE_POS):
-                    start_gen, threshold, generations, population, hidden_layers = train_setting(game, threshold, generations, population, start_gen, hidden_layers)
+                    selected_keys, selected_attributes, start_gen, threshold, generations, population, hidden_layers = train_setting(
+                        game, game_attributes, selected_keys, selected_attributes, threshold, generations, population, start_gen,
+                        hidden_layers)
+
+                if TEST_AI.check_input(MENU_MOUSE_POS):
+                    ai_player = AI_Player(game, path)
+                    trained = ai_player.evaluate()
+                    if not trained:
+                        error_msg(['Trained AI was not found.', 'Make sure to train your AI first.'])
 
                 if BACK.check_input(MENU_MOUSE_POS):
                     return

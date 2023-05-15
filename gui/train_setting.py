@@ -1,8 +1,10 @@
 import os
 
+from gui.attribute_selection import attribute_selection
+import key_selection as ks
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
-from assets.components.button import back_btn
+from assets.components.button import back_btn, manu_btn
 from assets.components.scrollbar import Scrollbar
 from assets.paths import *
 from assets.utils import *
@@ -19,13 +21,15 @@ DEFAULT_HIDDEN_LAYERS = 3
 
 
 class Settings:
-    def __init__(self, game_name, fitness, generations, population, start_cp, hidden_layers):
+    def __init__(self, game_name, selected_keys, selected_attributes, fitness, generations, population, start_cp, hidden_layers):
         pygame.init()
         self.cps_path = f"..\\agents\\NEAT\\games\\{game_name}\\checkpoints"
         # Screen creation
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Training Settings")
 
+        self.selected_keys = selected_keys
+        self.selected_attributes = selected_attributes
         # List settings
         self.top_margin = 200
         self.bottom_margin = 150
@@ -37,21 +41,21 @@ class Settings:
         # Items
         self.items = [
             ("Start Checkpoint", "Set to -1 for a new training",
-             Slider(self.slider_x, self.top_margin + 3 * (self.item_height + self.items_spacing), 500, -1,
+             Slider(self.slider_x, self.top_margin + 0 * (self.item_height + self.items_spacing), 500, -1,
                     self.cps_count(), 1,
                     start_cp)),
             ("Fitness Threshold", "Recommended: 250 - 350",
-             Slider(self.slider_x, self.top_margin + 0 * (self.item_height + self.items_spacing), 500, 50, 1000, 50,
+             Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 1000, 50,
                     fitness)),
             ("Generations", "Recommended: 10000",
-             Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 10000, 50,
+             Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 50, 10000, 50,
                     generations)),
             ("Population", "Recommended: 50",
-             Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 10, 200, 5,
+             Slider(self.slider_x, self.top_margin + 3 * (self.item_height + self.items_spacing), 500, 10, 200, 5,
                     population)),
             ("Neural Network Hidden Layers", "Recommended: 2 - 3",
              Slider(self.slider_x, self.top_margin + 4 * (self.item_height + self.items_spacing), 500, 1, 5, 1,
-                    hidden_layers))
+                    hidden_layers)),
         ]
         self.values = [start_cp, fitness, generations, population, hidden_layers]
 
@@ -67,7 +71,7 @@ class Settings:
 
         # Scrollbar creation
         self.scrollbar = Scrollbar(self.screen,
-                                   self.num_items * (self.item_height + self.items_spacing) - self.items_spacing,
+                                   170 + self.num_items * (self.item_height + self.items_spacing) - self.items_spacing,
                                    self.list_window, self.top_margin, self.bottom_margin)
 
         # Font
@@ -135,28 +139,34 @@ class Settings:
         slider.draw(self.screen)
 
 
-def train_setting(game_name, threshold, population, generations, start_gen, hidden_layers):
-    settings = Settings(game_name, threshold, population, generations, start_gen, hidden_layers)
+def train_setting(game_name, game_attributes, selected_keys, selected_attributes, threshold, population, generations, start_gen, hidden_layers):
+    settings = Settings(game_name, selected_keys, selected_attributes, threshold, population, generations, start_gen, hidden_layers)
     HEADER, HEADER_RECT = header("SETTINGS")
     SUBHEAD, SUBHEAD_RECT = subhead("SELECT YOUR TRAINING PREFERENCES", 16)
+    CONTROLS_BTN = manu_btn("Controls", (SCREEN_W // 2 - 200, 250))
+    ATTRIBUTES_BTN = manu_btn("Attributes", (SCREEN_W // 2 + 200, 250))
     BACK_BTN = back_btn()
 
     while True:
         settings.values = [
             item[2].value for i, item in enumerate(settings.items)
         ]
-        MENU_MOUSE_POS = pygame.mouse.get_pos()
-
-        BACK_BTN.change_color(MENU_MOUSE_POS)
+        mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Check if the mouse is over the button
-                if BACK_BTN.check_input(MENU_MOUSE_POS):
-                    return settings.values[0], settings.values[1], settings.values[2], settings.values[3], \
+                if BACK_BTN.check_input(mouse_pos):
+                    return selected_keys, selected_attributes, settings.values[0], settings.values[1], settings.values[2], settings.values[3], \
                         settings.values[4]
+                if CONTROLS_BTN.check_input(mouse_pos):
+                    settings.selected_keys = ks.key_selection(selected_keys)
+
+                if ATTRIBUTES_BTN.check_input(mouse_pos):
+                    settings.selected_attributes = attribute_selection(game_attributes, selected_attributes)
+
             settings.scrollbar.handle_event(event)
 
             # Handle events for the sliders
@@ -165,14 +175,27 @@ def train_setting(game_name, threshold, population, generations, start_gen, hidd
 
         settings.screen.blit(BACKGROUND, (0, 0))
 
-        y = settings.top_margin + settings.scrollbar.scroll_offset
+        y = settings.top_margin + settings.scrollbar.scroll_offset + 80
+
+        CONTROLS_BTN = manu_btn("Controls", (SCREEN_W // 2 - 185, y))
+        ATTRIBUTES_BTN = manu_btn("Attributes", (SCREEN_W // 2 + 185, y))
+        y += 90
         for i, item in enumerate(settings.items):
             settings.draw_item(settings.items[i][0], settings.items[i][1], y, settings.items[i][2])
             y += settings.item_height + settings.items_spacing
 
         settings.scrollbar.draw()
+
+        buttons = [CONTROLS_BTN, ATTRIBUTES_BTN]
+        for button in buttons:
+            button.change_color(mouse_pos)
+            button.update(settings.screen)
+
         settings.screen.blit(BACKGROUND_COVER, (0, 0))
+
+        BACK_BTN.change_color(mouse_pos)
         BACK_BTN.update(settings.screen)
+
         settings.screen.blit(HEADER, HEADER_RECT)
         settings.screen.blit(SUBHEAD, SUBHEAD_RECT)
 

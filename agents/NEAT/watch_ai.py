@@ -1,23 +1,58 @@
+import json
 import os
 import pickle
-import subprocess
 import socket
+import subprocess
 
 import neat
 import numpy as np
-import pygame
+
+from assets.utils import *
+
+pygame.init()
 
 
 class AI_Player:
-    def __init__(self, game_name, game_path, inputs, outputs):
-        self.config_path = "..\\agents\\NEAT\\games\\" + game_name + "\\config.txt"
-        self.player = "..\\agents\\NEAT\\games\\" + game_name + "\\trained_ai"
-        self.player_unfinished = "..\\agents\\NEAT\\games\\" + game_name + "\\unfinished_best_genome"
+    def __init__(self, game_name, game_path):
+        self.winner_net = None
+        self.score = None
+        self.config_path = f"..\\agents\\NEAT\\games\\{game_name}\\config.txt"
+        self.player = f"..\\agents\\NEAT\\games\\{game_name}\\trained_ai"
+        self.player_unfinished = f"..\\agents\\NEAT\\games\\{game_name}\\unfinished_best_genome"
+        self.player_data = f"..\\agents\\NEAT\\games\\{game_name}\\data.json"
+
+        with open(self.player_data, 'r') as f:
+            data = json.load(f)
+
         self.game_name = game_name
         self.game_path = game_path
-        self.inputs = inputs
-        self.outputs = list(outputs)
+        self.inputs = data["inputs"]
+        self.outputs = list(data["outputs"])
+
+        self.goal = round(data["threshold"] * 0.4, 2)
+
+        self.passed = 0
+        self.players_scores = []
+
         self.socket = None
+
+        self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+        pygame.display.set_caption(f"{game_name} AI Evaluation")
+
+        self.info_headers = [
+                                (train_info(f"GOAL: {self.goal}", (SCREEN_W // 2, 50))),
+                                (train_info("#", (240, 130))),
+                                (train_info("Score", (465, 130))),
+                                (train_info("#", (715, 130))),
+                                (train_info("Score", (940, 130))),
+                                (train_info(f"Passed: {self.passed}", (SCREEN_W // 2, 600)))
+                            ] + [
+                                (train_info(f"{i + 1}.", (240, 150 + 60 * (i + 1))))
+                                for i in range(5)
+                            ] + [
+                                (train_info(f"{i + 6}.", (715, 150 + 60 * (i + 1))))
+                                for i in range(5)
+                            ]
 
     def neat_setup(self):
         playable = False
@@ -35,14 +70,13 @@ class AI_Player:
 
             with open(player, "rb") as f:
                 winner = pickle.load(f)
-            winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
+            self.winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
 
-            self.play(winner_net)
         else:
             return False
         return True
 
-    def play(self, winner_net):
+    def play(self, evaluation=False):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('localhost', 8888))
         self.socket.listen()
@@ -59,11 +93,19 @@ class AI_Player:
                 input_arr = np.array([])
                 for s in data:
                     value = s[1]
-                    if '(' in s[1]:
-                        arr = np.array(eval(value))
-                        input_arr = np.concatenate((input_arr, arr.flatten()))
-                    elif s[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'score']:
+                    if '(' in s[1] or '[' in s[1]:
+                        arr = eval(value)
+                        if isinstance(arr[0], list) or isinstance(arr[0], np.ndarray):
+                            for sub_arr in arr:
+                                sub_arr = np.array(sub_arr)
+                                input_arr = np.concatenate((input_arr, sub_arr.flatten()))
+                        else:
+                            arr = np.array(arr)
+                            input_arr = np.concatenate((input_arr, arr.flatten()))
+                    elif s[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h']:
                         pass
+                    elif s[0] == 'score':
+                        self.score = eval(value)
                     else:
                         input_arr = np.append(input_arr, float(s[1]))
 
@@ -72,12 +114,17 @@ class AI_Player:
                         pygame.quit()
                         return True
 
-                move = self.action(winner_net, input_arr)
+                move = self.action(self.winner_net, input_arr)
                 client_socket.sendall(pickle.dumps(move))
 
+                if evaluation:
+                    if self.score >= self.goal:
+                        break
+
             else:
-                self.socket.close()
                 break
+
+        self.socket.close()
 
     def action(self, net, values):
         output = net.activate(values)
@@ -87,3 +134,42 @@ class AI_Player:
         else:
             decision -= 1
             return self.outputs[decision]
+
+    def evaluate(self):
+        players = 10
+        if self.neat_setup():
+            while players > 0:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        break
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            break
+
+                self.info()
+
+                self.score = 0
+
+                self.play(True)
+                if self.score >= self.goal:
+                    self.passed += 1
+
+                if players > 5:
+                    x_pos = 465
+
+                self.players_scores.append(train_info(f"{self.score}", (x_pos, y_pos)))
+                players -= 1
+
+        else:
+            return False
+
+        return True
+
+    def info(self):
+        self.screen.fill(BLACK)
+
+        for label, rect in self.info_headers:
+            self.screen.blit(label, rect)
+
+
+        pygame.display.update()

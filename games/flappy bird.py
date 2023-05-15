@@ -124,6 +124,9 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     bird.flap()
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
 
         # Spawn pillars
         pillar_spawn_counter += 1
