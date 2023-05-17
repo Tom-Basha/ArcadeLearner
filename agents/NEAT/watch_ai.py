@@ -20,39 +20,40 @@ class AI_Player:
         self.player = f"..\\agents\\NEAT\\games\\{game_name}\\trained_ai"
         self.player_unfinished = f"..\\agents\\NEAT\\games\\{game_name}\\unfinished_best_genome"
         self.player_data = f"..\\agents\\NEAT\\games\\{game_name}\\data.json"
+        self.passed = 0
 
-        with open(self.player_data, 'r') as f:
-            data = json.load(f)
+        if os.path.exists(self.player_data):
+            with open(self.player_data, 'r') as f:
+                data = json.load(f)
+
+                self.goal = round(data["threshold"] * 0.4, 2)
+                self.inputs = data["inputs"]
+                self.outputs = list(data["outputs"])
+                self.info_headers = [
+                                        (train_info(f"GOAL: {self.goal}", (SCREEN_W // 2, 50))),
+                                        (train_info("#", (240, 130))),
+                                        (train_info("Score", (465, 130))),
+                                        (train_info("#", (715, 130))),
+                                        (train_info("Score", (940, 130))),
+                                        (train_info(f"Passed: {self.passed}", (SCREEN_W // 2, 600)))
+                                    ] + [
+                                        (train_info(f"{i + 1}.", (240, 150 + 60 * (i + 1))))
+                                        for i in range(5)
+                                    ] + [
+                                        (train_info(f"{i + 6}.", (715, 150 + 60 * (i + 1))))
+                                        for i in range(5)
+                                    ]
+
+                self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+                pygame.display.set_caption(f"{game_name} AI Evaluation")
 
         self.game_name = game_name
         self.game_path = game_path
-        self.inputs = data["inputs"]
-        self.outputs = list(data["outputs"])
 
-        self.goal = round(data["threshold"] * 0.4, 2)
-
-        self.passed = 0
         self.players_scores = []
 
         self.socket = None
 
-        self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-        pygame.display.set_caption(f"{game_name} AI Evaluation")
-
-        self.info_headers = [
-                                (train_info(f"GOAL: {self.goal}", (SCREEN_W // 2, 50))),
-                                (train_info("#", (240, 130))),
-                                (train_info("Score", (465, 130))),
-                                (train_info("#", (715, 130))),
-                                (train_info("Score", (940, 130))),
-                                (train_info(f"Passed: {self.passed}", (SCREEN_W // 2, 600)))
-                            ] + [
-                                (train_info(f"{i + 1}.", (240, 150 + 60 * (i + 1))))
-                                for i in range(5)
-                            ] + [
-                                (train_info(f"{i + 6}.", (715, 150 + 60 * (i + 1))))
-                                for i in range(5)
-                            ]
 
     def neat_setup(self):
         playable = False

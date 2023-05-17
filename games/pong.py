@@ -24,6 +24,8 @@ class Player:
         self.speed = speed
         self.score = 0
         self.lives = 1
+        self.name = "tom"
+        self.bool = True
 
     def draw(self):
         pygame.draw.rect(screen, self.color, self.rect)

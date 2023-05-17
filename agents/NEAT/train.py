@@ -9,6 +9,7 @@ import neat
 import time
 
 from assets.components.button import training_btn
+from assets.error import error_msg
 from assets.utils import *
 
 pygame.init()
@@ -44,6 +45,7 @@ class Trainer:
         self.duration = 0
         self.penalty = 0
 
+        self.valid_input = True
         self.quit_training = False
         self.pause_training = False
 
@@ -265,15 +267,18 @@ class Trainer:
     def neat_setup(self):
         if self.start_gen == -1:
             self.update_config()
-        print(self.config_path)
-        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                             neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                             self.config_path)
 
-        if self.start_gen != -1:
-            self.total_genomes = self.start_gen * self.population
-        self.run_neat(config)
+        if self.valid_input:
+            print(self.config_path)
+            config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                                 neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                                 self.config_path)
 
+            if self.start_gen != -1:
+                self.total_genomes = self.start_gen * self.population
+            self.run_neat(config)
+        else:
+            error_msg(["Invalid attribute type.", "Please select attributes with numeric ", "values only."])
         return
 
     def add_essentials(self):
@@ -324,12 +329,20 @@ class Trainer:
             elif s[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h']:
                 self.set_player_frame(s)
             else:
-                input_arr = np.append(input_arr, float(s[1]))
+                if type(s[1]) in (int, float):
+                    input_arr = np.append(input_arr, float(s[1]))
+                else:
+                    self.valid_input = False
+
         return data, input_arr
 
     def update_config(self):
         attributes = ['fitness_threshold', 'pop_size', 'num_outputs', 'num_inputs', 'num_hidden']
-        values = [self.threshold, self.population, len(self.outputs) + 1, self.test_inputs(), self.hidden_layers]
+        inputs_cnt = self.test_inputs()
+        if not self.valid_input:
+            return False
+
+        values = [self.threshold, self.population, len(self.outputs) + 1, inputs_cnt, self.hidden_layers]
 
         with open(self.config_path, 'r') as file:
             config_lines = file.readlines()
