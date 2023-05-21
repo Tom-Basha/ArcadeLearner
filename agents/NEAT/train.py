@@ -329,9 +329,10 @@ class Trainer:
             elif s[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h']:
                 self.set_player_frame(s)
             else:
-                if type(s[1]) in (int, float):
+                if type(eval(s[1])) in (int, float):
                     input_arr = np.append(input_arr, float(s[1]))
                 else:
+                    print(f"PROBLEM: {s[1]}, {type(s[1])}")
                     self.valid_input = False
 
         return data, input_arr

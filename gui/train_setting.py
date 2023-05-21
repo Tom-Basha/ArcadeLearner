@@ -45,7 +45,7 @@ class Settings:
                     self.cps_count(), 1,
                     start_cp)),
             ("Fitness Threshold", "Recommended: 250 - 350",
-             Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 1000, 50,
+             Slider(self.slider_x, self.top_margin + 1 * (self.item_height + self.items_spacing), 500, 50, 5000, 50,
                     fitness)),
             ("Generations", "Recommended: 10000",
              Slider(self.slider_x, self.top_margin + 2 * (self.item_height + self.items_spacing), 500, 50, 10000, 50,

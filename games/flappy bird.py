@@ -44,7 +44,7 @@ class Bird(pygame.sprite.Sprite):
         self.rect.y -= self.velocity
 
     def flap(self):
-        self.velocity = 10
+        self.velocity = 7
 
 
 class Pillar(pygame.sprite.Sprite):
@@ -169,6 +169,7 @@ def main():
             draw_text(screen, f'Score: {bird.score}', 24, WIDTH // 2, 10)
             pygame.display.flip()
             pygame.time.delay(300)
+            print(bird.score)
             break
 
         clock.tick(fps)

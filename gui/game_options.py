@@ -26,7 +26,7 @@ def selected_game(game, path):
     population = 50
     generations = 10000
     start_gen = -1
-    hidden_layers = 3
+    hidden_layers = 2
 
     HEADER, HEADER_RECT = header(game)
 
