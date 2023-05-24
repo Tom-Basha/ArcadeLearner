@@ -315,7 +315,10 @@ class Trainer:
         input_arr = np.array([])
         for s in data:
             value = s[1]
-            if '(' in s[1] or '[' in s[1]:
+            if '<' in s[1]:
+                print(f"PROBLEM: {s[1]}, {type(s[1])}")
+                self.valid_input = False
+            elif '(' in s[1] or '[' in s[1]:
                 arr = eval(value)
                 if isinstance(arr[0], list) or isinstance(arr[0], np.ndarray):
                     for sub_arr in arr:

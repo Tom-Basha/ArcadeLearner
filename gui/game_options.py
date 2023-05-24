@@ -34,7 +34,6 @@ def selected_game(game, path):
     WATCH_BTN = manu_btn("Watch AI", (640, 280))
     TRAIN_BTN = manu_btn("Train AI", (1010, 280))
     SETTINGS = manu_btn("Settings", (640, 440))
-    # TEST_AI = manu_btn("Test AI", (SCREEN_W // 2 + 185, 440))
     BACK = back_btn()
 
     buttons = [PLAY_BTN, WATCH_BTN, TRAIN_BTN, BACK, SETTINGS]
@@ -92,12 +91,6 @@ def selected_game(game, path):
                     selected_keys, selected_attributes, start_gen, threshold, generations, population, hidden_layers = train_setting(
                         game, game_attributes, selected_keys, selected_attributes, threshold, generations, population, start_gen,
                         hidden_layers)
-
-                # if TEST_AI.check_input(MENU_MOUSE_POS):
-                #     ai_player = AI_Player(game, path)
-                #     trained = ai_player.evaluate()
-                #     if not trained:
-                #         error_msg(['Trained AI was not found.', 'Make sure to train your AI first.'])
 
                 if BACK.check_input(MENU_MOUSE_POS):
                     return

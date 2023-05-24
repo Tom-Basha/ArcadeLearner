@@ -7,6 +7,8 @@ import subprocess
 import neat
 import numpy as np
 
+from testings import visualize
+
 from assets.utils import *
 
 pygame.init()
@@ -20,29 +22,13 @@ class AI_Player:
         self.player = f"..\\agents\\NEAT\\games\\{game_name}\\trained_ai"
         self.player_unfinished = f"..\\agents\\NEAT\\games\\{game_name}\\unfinished_best_genome"
         self.player_data = f"..\\agents\\NEAT\\games\\{game_name}\\data.json"
-        self.passed = 0
 
         if os.path.exists(self.player_data):
             with open(self.player_data, 'r') as f:
                 data = json.load(f)
 
-                self.goal = round(data["threshold"] * 0.4, 2)
                 self.inputs = data["inputs"]
                 self.outputs = list(data["outputs"])
-                self.info_headers = [
-                                        (train_info(f"GOAL: {self.goal}", (SCREEN_W // 2, 50))),
-                                        (train_info("#", (240, 130))),
-                                        (train_info("Score", (465, 130))),
-                                        (train_info("#", (715, 130))),
-                                        (train_info("Score", (940, 130))),
-                                        (train_info(f"Passed: {self.passed}", (SCREEN_W // 2, 600)))
-                                    ] + [
-                                        (train_info(f"{i + 1}.", (240, 150 + 60 * (i + 1))))
-                                        for i in range(5)
-                                    ] + [
-                                        (train_info(f"{i + 6}.", (715, 150 + 60 * (i + 1))))
-                                        for i in range(5)
-                                    ]
 
                 self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
                 pygame.display.set_caption(f"{game_name} AI Evaluation")
@@ -50,10 +36,7 @@ class AI_Player:
         self.game_name = game_name
         self.game_path = game_path
 
-        self.players_scores = []
-
         self.socket = None
-
 
     def neat_setup(self):
         playable = False
@@ -118,10 +101,6 @@ class AI_Player:
                 move = self.action(self.winner_net, input_arr)
                 client_socket.sendall(pickle.dumps(move))
 
-                if evaluation:
-                    if self.score >= self.goal:
-                        break
-
             else:
                 break
 
@@ -136,41 +115,3 @@ class AI_Player:
             decision -= 1
             return self.outputs[decision]
 
-    def evaluate(self):
-        players = 10
-        if self.neat_setup():
-            while players > 0:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        break
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            break
-
-                self.info()
-
-                self.score = 0
-
-                self.play(True)
-                if self.score >= self.goal:
-                    self.passed += 1
-
-                if players > 5:
-                    x_pos = 465
-
-                self.players_scores.append(train_info(f"{self.score}", (x_pos, y_pos)))
-                players -= 1
-
-        else:
-            return False
-
-        return True
-
-    def info(self):
-        self.screen.fill(BLACK)
-
-        for label, rect in self.info_headers:
-            self.screen.blit(label, rect)
-
-
-        pygame.display.update()

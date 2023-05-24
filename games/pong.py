@@ -1,3 +1,4 @@
+import math
 import os
 import pickle
 import socket
@@ -24,8 +25,7 @@ class Player:
         self.speed = speed
         self.score = 0
         self.lives = 1
-        self.name = "tom"
-        self.bool = True
+
 
     def draw(self):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -70,8 +70,12 @@ class Ball:
     def move(self):
         self.rect.x += self.speed[0]
         self.rect.y += self.speed[1]
+        if self.rect.top < 30:
+            self.rect.top = 30
+        elif self.rect.bottom > size[1]:
+            self.rect.bottom = size[1]
 
-        if self.rect.top <= 30 or self.rect.bottom >= size[1]:
+        if self.rect.top <= 30 and self.speed[1] < 0 or self.rect.bottom >= size[1] and self.speed[1] > 0:
             self.speed[1] *= -1
 
     def reset(self):
@@ -120,18 +124,30 @@ def update(player, ball):
     screen.blit(lives_text, rect)
 
 
+def set_angle(ball_y, peddle_y):
+    dist = peddle_y - ball_y
+    percent = abs(dist) / 30
+    angle = 40 + 50 * percent
+    angle_radians = math.radians(angle)
+    x_param = math.cos(angle_radians)
+    y_param = math.sin(angle_radians)
+    return x_param, y_param
+
+
 def handle_collision(ball, player, opponent):
     if ball.rect.colliderect(player.rect):
         ball.hits += 1
         if ball.hits % 10 == 0:
             ball.curr_speed += 1
         if player.rect.top < ball.rect.centery < player.rect.bottom:
+            x_param, y_param = set_angle(ball.rect.centery, player.rect.centery)
+
             # The ball hit the side of the paddle
             ball.rect.right = player.rect.left
             if ball.rect.centery <= player.rect.centery:
-                ball.speed = [-ball.curr_speed, -ball.curr_speed]
+                ball.speed = [-ball.curr_speed * x_param, -ball.curr_speed * y_param]
             else:
-                ball.speed = [-ball.curr_speed, ball.curr_speed]
+                ball.speed = [-ball.curr_speed * x_param, ball.curr_speed * y_param]
         else:
             # The ball hit the corners of the paddle
             if ball.rect.centery < player.rect.centery:
@@ -146,11 +162,13 @@ def handle_collision(ball, player, opponent):
             ball.curr_speed += 1
         if opponent.rect.top < ball.rect.centery < opponent.rect.bottom:
             # The ball hit the side of the paddle
+            x_param, y_param = set_angle(ball.rect.centery, opponent.rect.centery)
+
             ball.rect.left = opponent.rect.right
             if ball.rect.centery <= opponent.rect.centery:
-                ball.speed = [ball.curr_speed, -ball.curr_speed]
+                ball.speed = [ball.curr_speed * x_param, -ball.curr_speed * y_param]
             else:
-                ball.speed = [ball.curr_speed, ball.curr_speed]
+                ball.speed = [ball.curr_speed * x_param, ball.curr_speed * y_param]
         else:
             # The ball hit the corners of the paddle
             if ball.rect.centery < opponent.rect.centery:
@@ -170,6 +188,10 @@ def handle_collision(ball, player, opponent):
             sys.exit()
         ball.reset()
 
+    if abs(ball.speed[0]) < 1:
+        ball.speed[0] = -1 if ball.speed[0] < 0 else 1
+
+    print(ball.speed)
 
 def main():
     global fps
