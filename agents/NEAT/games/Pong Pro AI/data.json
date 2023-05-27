@@ -1,0 +1,25 @@
+{
+  "population": 30,
+  "generations": 10000,
+  "inputs": {
+    "Player": [
+      "rect.center",
+      "rect.x",
+      "rect.y",
+      "rect.w",
+      "rect.h",
+      "score"
+    ],
+    "Opponent": [
+      "rect.center"
+    ],
+    "Ball": [
+      "rect.center"
+    ]
+  },
+  "outputs": [
+    "pygame.K_UP",
+    "pygame.K_DOWN"
+  ],
+  "threshold": 500
+}

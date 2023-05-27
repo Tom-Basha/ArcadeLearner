@@ -188,10 +188,9 @@ def handle_collision(ball, player, opponent):
             sys.exit()
         ball.reset()
 
-    if abs(ball.speed[0]) < 1:
-        ball.speed[0] = -1 if ball.speed[0] < 0 else 1
+    if abs(ball.speed[0]) < 2:
+        ball.speed[0] = -2 if ball.speed[0] < 0 else 2
 
-    print(ball.speed)
 
 def main():
     global fps
@@ -261,8 +260,6 @@ def main():
                                 temp_attr = parts[1]
                             if hasattr(temp_obj, temp_attr):
                                 data.append((attr, str(getattr(temp_obj, temp_attr))))
-
-            # print(data)
 
             s.sendall(pickle.dumps(data))
             action = s.recv(4096)

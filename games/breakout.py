@@ -515,6 +515,7 @@ class Game(object):
                 action = s.recv(4096)
                 if action:
                     action = pickle.loads(action)
+
                     if action != 0:
                         pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
                 else:

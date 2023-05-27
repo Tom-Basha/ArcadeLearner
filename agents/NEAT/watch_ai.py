@@ -7,7 +7,6 @@ import subprocess
 import neat
 import numpy as np
 
-from testings import visualize
 
 from assets.utils import *
 

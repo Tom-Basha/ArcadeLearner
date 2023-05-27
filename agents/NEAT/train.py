@@ -11,6 +11,7 @@ import time
 from assets.components.button import training_btn
 from assets.error import error_msg
 from assets.utils import *
+from testings import visualize
 
 pygame.init()
 
@@ -279,6 +280,7 @@ class Trainer:
             self.run_neat(config)
         else:
             error_msg(["Invalid attribute type.", "Please select attributes with numeric ", "values only."])
+
         return
 
     def add_essentials(self):
