@@ -4,14 +4,15 @@ import pickle
 import shutil
 import socket
 import subprocess
+import sys
+
 import numpy as np
 import neat
 import time
 
-from assets.components.button import training_btn
+from assets.components.button import training_btn, back_btn
 from assets.error import error_msg
 from assets.utils import *
-from testings import visualize
 
 pygame.init()
 
@@ -75,6 +76,11 @@ class Trainer:
             (train_info("Best Genome", (SCREEN_W // 2, 460)))
         ]
 
+        self.winner_key = None
+        self.winner_gen = None
+        self.winner_score = None
+        self.winner_fitness = None
+
     def train_ai(self, genome, config):
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         subprocess.Popen(["python", self.game_path], shell=True)
@@ -107,6 +113,10 @@ class Trainer:
                 self.update_fitness(genome)
 
                 if genome.fitness >= self.threshold:
+                    self.winner_score = self.score
+                    self.winner_gen = self.curr_generation
+                    self.winner_key = genome.key
+                    self.winner_fitness = round(genome.fitness, 3)
                     break
             else:
                 break
@@ -225,7 +235,7 @@ class Trainer:
         game_files = f"..\\agents\\NEAT\\games\\{self.game_name}"
         cps_path = f"..\\agents\\NEAT\\games\\{self.game_name}\\checkpoints"
         cp_prefix = f"{cps_path}\\train_checkpoint_"
-
+        finished = False
         if self.start_gen == -1:
             p = neat.Population(config)
             if os.path.exists(cps_path):
@@ -247,15 +257,22 @@ class Trainer:
 
         p.add_reporter(stats)
         p.add_reporter(checkpointer)
+        start_time = time.time()
 
         try:
             winner = p.run(self.genomes_eval, self.generations)
             with open(f"{game_files}\\trained_ai", "wb") as f:
                 pickle.dump(winner, f)
+            finished = True
         except TypeError:
             winner = self.best_genome_obj
-            with open(f"{game_files}\\unfinished_best_genome", "wb") as f:
-                pickle.dump(winner, f)
+            if not finished:
+                with open(f"{game_files}\\unfinished_best_genome", "wb") as f:
+                    pickle.dump(winner, f)
+
+        end_time = time.time()
+        elapsed_time = round(end_time - start_time)
+        formatted_time = format_time(elapsed_time)
 
         self.save_data(game_files)
 
@@ -264,6 +281,8 @@ class Trainer:
         if self.start_gen == -1:
             destination_file = os.path.join(game_files, 'config.txt')
             shutil.copy(self.config_path, destination_file)
+        if finished:
+            self.finish_screen(formatted_time)
 
     def neat_setup(self):
         if self.start_gen == -1:
@@ -475,3 +494,67 @@ class Trainer:
 
         with open(path, "w") as json_file:
             json.dump(data, json_file)
+
+    def finish_screen(self, timer):
+        pygame.init()
+        screen = pygame.display.set_mode((1280, 720))
+        BACK_BTN = back_btn(color=GREEN)
+        headers_x = SCREEN_W // 2 - 300
+        resaults_x = SCREEN_W // 2 + 300
+        finish_headers = [
+            (train_info("Winner Key:", (headers_x, 260), alignment="topleft")),
+            (train_info("Winner Generation:", (headers_x, 300), alignment="topleft")),
+            (train_info("Winner Score:", (headers_x, 340), alignment="topleft")),
+            (train_info("Winner Fitness:", (headers_x, 380), alignment="topleft")),
+            (train_info("Training length:", (headers_x, 420), alignment="topleft")),
+        ]
+
+        resaults = [
+            (train_info(f"{self.winner_key}", (resaults_x, 260), alignment="topright")),
+            (train_info(f"{self.winner_gen}", (resaults_x, 300), alignment="topright")),
+            (train_info(f"{self.winner_score}", (resaults_x, 340), alignment="topright")),
+            (train_info(f"{self.winner_fitness}", (resaults_x, 380), alignment="topright")),
+            (train_info(f"{timer}", (resaults_x, 420), alignment="topright")),
+        ]
+
+        # Labels
+        HEADER_TEXT, HEADER_RECT = header("Success!", color=GREEN)
+        SUBHEAD_TEXT, SUBHEAD_RECT = subhead("TRAINING COMPLETED SUCCESSFULLY!", color=WHITE, size=24)
+
+        while True:
+            screen.fill("black")
+
+            # Set mouse
+            MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+            screen.blit(HEADER_TEXT, HEADER_RECT)
+            screen.blit(SUBHEAD_TEXT, SUBHEAD_RECT)
+
+            BACK_BTN.change_color(MENU_MOUSE_POS)
+            BACK_BTN.update(screen)
+
+            for label, rect in finish_headers:
+                screen.blit(label, rect)
+
+            for label, rect in resaults:
+                screen.blit(label, rect)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button:
+                    if BACK_BTN.check_input(MENU_MOUSE_POS):
+                        return
+
+            pygame.display.update()
+
+
+def format_time(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    if hours == 0:
+        return "{:02d}:{:02d}".format(minutes, seconds)
+    else:
+        return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)

@@ -6,7 +6,7 @@ import subprocess
 
 import neat
 import numpy as np
-
+from assets import visualize
 
 from assets.utils import *
 
@@ -17,10 +17,11 @@ class AI_Player:
     def __init__(self, game_name, game_path):
         self.winner_net = None
         self.score = None
-        self.config_path = f"..\\agents\\NEAT\\games\\{game_name}\\config.txt"
-        self.player = f"..\\agents\\NEAT\\games\\{game_name}\\trained_ai"
-        self.player_unfinished = f"..\\agents\\NEAT\\games\\{game_name}\\unfinished_best_genome"
-        self.player_data = f"..\\agents\\NEAT\\games\\{game_name}\\data.json"
+        self.saved_folder =  f"..\\agents\\NEAT\\games\\{game_name}"
+        self.config_path = f"{self.saved_folder}\\config.txt"
+        self.player = f"{self.saved_folder}\\trained_ai"
+        self.player_unfinished = f"{self.saved_folder}\\unfinished_best_genome"
+        self.player_data = f"{self.saved_folder}\\data.json"
 
         if os.path.exists(self.player_data):
             with open(self.player_data, 'r') as f:
@@ -54,6 +55,7 @@ class AI_Player:
             with open(player, "rb") as f:
                 winner = pickle.load(f)
             self.winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
+            visualize.draw_net(config, winner, game=self.game_name, game_dir=self.saved_folder)
 
         else:
             return False

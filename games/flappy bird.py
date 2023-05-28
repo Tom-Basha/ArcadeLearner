@@ -98,7 +98,7 @@ def main():
         instructions = pickle.loads(s.recv(4096))
         # print(f"Requested attributes: {instructions}")
         connected = True
-        fps = 0
+        fps = 60
     except ConnectionRefusedError:
         pass
 

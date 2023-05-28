@@ -30,12 +30,12 @@ def label_creation(text, size, color, pos, alignment="center"):
     return label, rect
 
 
-def header(text, pos=(640, 85)):
-    return label_creation(text, 70, MAIN_CLR, pos)
+def header(text, pos=(640, 85), color=MAIN_CLR):
+    return label_creation(text, 70, color, pos)
 
 
-def subhead(text, size=30, pos=(640, 135)):
-    return label_creation(text, size, SECONDARY_CLR, pos)
+def subhead(text, size=30, pos=(640, 135), color=SECONDARY_CLR):
+    return label_creation(text, size, color, pos)
 
 
 def keyboard_key(text, color, pos):

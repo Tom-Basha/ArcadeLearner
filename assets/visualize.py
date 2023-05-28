@@ -1,7 +1,7 @@
 import graphviz
 
 
-def draw_net(config, genome, game=None, view=True, filename=None, fmt='png'):
+def draw_net(config, genome, game=None, game_dir=None, view=True, filename=None, fmt='png'):
     """ Receives a genome and draws a neural network with arbitrary topology. """
     # If requested, use a copy of the genome which omits all components that won't affect the output.
 
@@ -32,7 +32,7 @@ def draw_net(config, genome, game=None, view=True, filename=None, fmt='png'):
         'fontname': 'Sans',
     }
 
-    dot = graphviz.Digraph(format=fmt, filename=f"ANN Diagram", node_attr=node_attrs, graph_attr=graph_attrs)
+    dot = graphviz.Digraph(format=fmt, filename=f"../testings/ANN Diagram", node_attr=node_attrs, graph_attr=graph_attrs)
 
     inputs = set()
     for k in config.genome_config.input_keys:
@@ -60,6 +60,6 @@ def draw_net(config, genome, game=None, view=True, filename=None, fmt='png'):
             width = str(1 + abs(cg.weight / 5.0))
             dot.edge(a, b, _attributes={'style': style, 'color': color, 'penwidth': width})
 
-    dot.render(filename, view=view)
+    dot.render(filename, directory=game_dir, view=view)
 
     return dot

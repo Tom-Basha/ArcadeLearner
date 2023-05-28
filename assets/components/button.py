@@ -43,8 +43,8 @@ class Button:
 
 
 # presets
-def back_btn(text="RETURN"):
-    return Button((640, 640), text, get_font(55), MAIN_CLR, SECONDARY_CLR, bg=False)
+def back_btn(text="RETURN", color=MAIN_CLR):
+    return Button((640, 640), text, get_font(55), color, SECONDARY_CLR, bg=False)
 
 
 def manu_btn(text, pos):
