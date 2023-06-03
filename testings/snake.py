@@ -10,7 +10,14 @@ import random
 pygame.init()
 
 # Screen dimensions
-WIDTH, HEIGHT = 640, 480
+WIDTH, HEIGHT = 200, 200
+GRID_SIZE = 15
+BLOCK_SIZE = 20  # Size of each block (20x20 pixels)
+
+# Adjust screen dimensions to fit blocks
+WIDTH = GRID_SIZE * BLOCK_SIZE
+HEIGHT = GRID_SIZE * BLOCK_SIZE
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
 
 # Colors
@@ -23,29 +30,6 @@ WHITE = (255, 255, 255)
 fps = 20
 
 
-class Food:
-    def __init__(self, snake):
-        self.size = snake.size
-        self.position = self.spawn(snake)
-        self.rect = pygame.Rect(self.position[0], self.position[1], self.size, self.size)
-
-    def spawn(self, snake):
-        while True:
-            food_pos = (
-                random.randrange(0, WIDTH - self.size, self.size), random.randrange(0, HEIGHT - self.size, self.size))
-            if food_pos not in snake.positions:
-                return food_pos
-
-    def draw(self, screen):
-        pygame.draw.circle(screen, RED, (self.position[0] + self.size // 2, self.position[1] + self.size // 2),
-                           self.size // 2)
-
-    def respawn(self, snake):
-        self.position = self.spawn(snake)
-        self.rect.topleft = self.position
-
-
-# Snake object
 class Snake:
     def __init__(self):
         self.size = 20
@@ -55,40 +39,31 @@ class Snake:
         self.next_direction = self.direction
         self.rect = pygame.Rect(self.positions[0][0], self.positions[0][1], self.size, self.size)
         self.score = 0
-        self.options = [0, 0, 0, 0]  # left, up, right, down
 
-    def update_options(self):
-        left_pos = (self.positions[0][0] - self.size, self.positions[0][1])
-        up_pos = (self.positions[0][0], self.positions[0][1] - self.size)
-        right_pos = (self.positions[0][0] + self.size, self.positions[0][1])
-        down_pos = (self.positions[0][0], self.positions[0][1] + self.size)
-
-        self.options = [
-            1 if left_pos not in self.positions and 0 <= left_pos[0] < WIDTH else -1,
-            1 if up_pos not in self.positions and 0 <= up_pos[1] < HEIGHT else -1,
-            1 if right_pos not in self.positions and 0 <= right_pos[0] < WIDTH else -1,
-            1 if down_pos not in self.positions and 0 <= down_pos[1] < HEIGHT else -1,
-        ]
-
-        if self.direction == (0, -self.size):  # going up
-            self.options[3] = 0
-        elif self.direction == (0, self.size):  # going down
-            self.options[1] = 0
-        elif self.direction == (-self.size, 0):  # going left
-            self.options[2] = 0
-        elif self.direction == (self.size, 0):  # going right
-            self.options[0] = 0
+        self.grid = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]
+        for x, y in self.positions:
+            self.grid[y // self.size][x // self.size] = 1
+        self.grid[self.positions[0][1] // self.size][self.positions[0][0] // self.size] = 2
 
     def move(self):
         self.direction = self.next_direction
         new_pos = (self.positions[0][0] + self.direction[0], self.positions[0][1] + self.direction[1])
+        old_tail = self.positions.pop()
         self.positions.insert(0, new_pos)
-        self.positions.pop()
+
+        self.grid[old_tail[1] // self.size][old_tail[0] // self.size] = 0
+
+        if (0 <= new_pos[0] < WIDTH and 0 <= new_pos[1] < HEIGHT):
+            self.grid[new_pos[1] // self.size][new_pos[0] // self.size] = 2
+
+        self.grid[self.positions[1][1] // self.size][self.positions[1][0] // self.size] = 1
         self.rect.topleft = new_pos
 
     def grow(self):
         self.positions.append(self.positions[-1])
         self.score += 1
+
+        self.grid[self.positions[-1][1] // self.size][self.positions[-1][0] // self.size] = 1
 
     def draw(self, screen):
         for i, pos in enumerate(self.positions):
@@ -98,18 +73,31 @@ class Snake:
                 color = DARK_GREEN
             pygame.draw.rect(screen, color, (pos[0] + 1, pos[1] + 1, self.size - 2, self.size - 2))
 
-    def check_collision(self, pos):
-        if pos in self.positions[1:]:
-            return True
-        return False
 
+class Food:
+    def __init__(self, snake):
+        self.size = snake.size
+        self.position = self.spawn(snake)
+        self.rect = pygame.Rect(self.position[0], self.position[1], self.size, self.size)
 
-def spawn_food(snake):
-    while True:
-        food_pos = (
-            random.randrange(0, WIDTH - snake.size, snake.size), random.randrange(0, HEIGHT - snake.size, snake.size))
-        if food_pos not in snake.positions:
-            return food_pos
+        snake.grid[self.position[1] // self.size][self.position[0] // self.size] = 3
+
+    def spawn(self, snake):
+        while True:
+            x = random.randrange(0, WIDTH, self.size)
+            y = random.randrange(0, HEIGHT, self.size)
+            if snake.grid[y // self.size][x // self.size] == 0:
+                return x, y
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, RED, self.rect)
+
+    def respawn(self, snake):
+        snake.grid[self.position[1] // self.size][self.position[0] // self.size] = 0
+        self.position = self.spawn(snake)
+        self.rect.topleft = self.position
+
+        snake.grid[self.position[1] // self.size][self.position[0] // self.size] = 3
 
 
 def draw_score(screen, score):
@@ -127,7 +115,7 @@ def main():
         instructions = pickle.loads(s.recv(4096))
         # print(f"Requested attributes: {instructions}")
         connected = True
-        fps = 0
+        fps = 60
     except ConnectionRefusedError:
         pass
 
@@ -154,15 +142,16 @@ def main():
                     snake.next_direction = (snake.size, 0)
 
         snake.move()
-        snake.update_options()
 
-        if (snake.rect.left < 0 or snake.rect.right > WIDTH or
-                snake.rect.top < 0 or snake.rect.bottom > HEIGHT or
-                snake.check_collision(snake.rect.topleft)):
+        # Check for collision with wall or self
+        if (snake.positions[0][0] < 0 or snake.positions[0][0] >= WIDTH or
+                snake.positions[0][1] < 0 or snake.positions[0][1] >= HEIGHT or
+                snake.positions[0] in snake.positions[1:]):
             pygame.quit()
             sys.exit()
 
-        if snake.rect.colliderect(food.rect):
+        # Check for collision with food
+        if snake.positions[0] == food.position:
             snake.grow()
             food.respawn(snake)
 
@@ -193,6 +182,7 @@ def main():
             action = s.recv(4096)
             if action:
                 action = pickle.loads(action)
+
                 if action != 0:
                     pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=eval(action)))
             else:
@@ -201,9 +191,10 @@ def main():
 
     s.close()
 
+
 if __name__ == "__main__":
     main()
 
-    # Closing the game
-    pygame.quit()
-    sys.exit()
+# Closing the game
+pygame.quit()
+sys.exit()

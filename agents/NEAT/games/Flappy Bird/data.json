@@ -1,1 +1,1 @@
-{"population": 10, "generations": 10000, "inputs": {"Bird": ["rect.center", "rect.x", "rect.y", "rect.w", "rect.h", "score", "x", "y"], "Pillar": ["gap_top", "gap_bottom", "rect.center"]}, "outputs": ["pygame.K_SPACE"], "threshold": 20}
+{"population": 50, "generations": 10000, "inputs": {"Bird": ["rect.center", "rect.x", "rect.y", "rect.w", "rect.h", "score", "x", "y"], "Pillar": ["gap_top", "gap_bottom", "rect.center"]}, "outputs": ["pygame.K_SPACE"], "threshold": 250}

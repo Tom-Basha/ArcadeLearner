@@ -308,6 +308,7 @@ class Ball(BaseObject):
 class GamePlay(BaseState):
     def __init__(self):
         super(GamePlay, self).__init__()
+        self.new_board = False
         self.level = 1
         self.reset = False
 
@@ -430,17 +431,7 @@ class GamePlay(BaseState):
                 self.done = True
 
             if not self.block_group:
-                self.status = "winner"
-                self.persist["status"] = self.status
-                self.persist["level"] = self.level
-
-                self.level += 1
-
-                if self.level <= FINAL_LEVEL:
-                    self.done = True
-
-                elif self.level > FINAL_LEVEL:
-                    self.done = True
+                self.new_board = True
 
 
 class Game(object):
@@ -495,6 +486,13 @@ class Game(object):
             self.update(dt)
             self.draw()
             pygame.display.update()
+
+            if self.state.new_board and self.state.ball.rect.y > 588:
+                self.state.player.score += 10
+                self.state.new_board = False
+                self.state.block_group = stage_setup(self.state.all_sprites, self.state.collide_sprites)
+                self.state.all_sprites.add(self.state.block_group)
+                self.state.collide_sprites.add(self.state.block_group)
 
             if connected:
                 data = []

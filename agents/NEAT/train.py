@@ -113,10 +113,13 @@ class Trainer:
                 self.update_fitness(genome)
 
                 if genome.fitness >= self.threshold:
-                    self.winner_score = self.score
-                    self.winner_gen = self.curr_generation
-                    self.winner_key = genome.key
-                    self.winner_fitness = round(genome.fitness, 3)
+                    if self.score > 10:
+                        self.winner_score = self.score
+                        self.winner_gen = self.curr_generation
+                        self.winner_key = genome.key
+                        self.winner_fitness = round(genome.fitness, 3)
+                    else:
+                        genome.fitness = 5
                     break
             else:
                 break
@@ -130,6 +133,10 @@ class Trainer:
             self.penalty += 30
 
         self.update_fitness(genome)
+
+        if self.duration > 300 and self.score < 5:
+            genome.fitness = -5
+            
         print(
             f"{genome.key}.\t\t Fitness: {round(genome.fitness, 3)}\t|\t Duration: {self.duration}\t|\t Score: {self.score}")
 
