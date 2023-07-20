@@ -37,7 +37,6 @@ class Bird(pygame.sprite.Sprite):
         self.velocity = 0
         self.score = 0
 
-
     def update(self):
         self.velocity -= 0.4
         self.y -= self.velocity
@@ -96,9 +95,8 @@ def main():
     try:
         s.connect(('localhost', 8888))
         instructions = pickle.loads(s.recv(4096))
-        # print(f"Requested attributes: {instructions}")
         connected = True
-        fps = 60
+        fps = 0
     except ConnectionRefusedError:
         pass
 
@@ -150,14 +148,13 @@ def main():
                 pillar.passed = True
                 bird.score += 1
                 pillar_list = pillars.sprites()
-                active_objects[1] = pillar_list[i+1]
+                active_objects[1] = pillar_list[i + 1]
             if pillar.rect.x < 0 - 30:
                 pillars.remove(pillar)
                 all_sprites.remove(pillar)
 
         # Draw
         screen.fill((100, 100, 100))
-        # create_background()
         all_sprites.draw(screen)
         draw_text(screen, f'Score: {bird.score}', 24, WIDTH // 2, 10)
         pygame.display.flip()
