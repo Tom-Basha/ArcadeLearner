@@ -22,7 +22,7 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
-fps = 80
+fps = 150
 
 
 class Bird(pygame.sprite.Sprite):
@@ -96,7 +96,7 @@ def main():
         s.connect(('localhost', 8888))
         instructions = pickle.loads(s.recv(4096))
         connected = True
-        fps = 0
+        fps = 150
     except ConnectionRefusedError:
         pass
 
@@ -115,6 +115,8 @@ def main():
     spawn_target = 420 // 3  # Dividing by the pillar speed (3) to get the required number of frames
 
     while True:
+        clock.tick(fps)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -168,7 +170,6 @@ def main():
             pygame.time.delay(300)
             break
 
-        clock.tick(fps)
 
         # print("Gap bottom: ", active_objects[1].gap_bottom, "\tGap top: ", active_objects[1].gap_top, "\tX pos: ", active_objects[1].x_pos, "\tBird x: ", active_objects[0].x)
         if connected:

@@ -6,7 +6,6 @@ import subprocess
 
 import neat
 import numpy as np
-from assets import visualize
 
 from assets.utils import *
 
@@ -55,7 +54,6 @@ class AI_Player:
             with open(player, "rb") as f:
                 winner = pickle.load(f)
             self.winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-            visualize.draw_net(config, winner, game=self.game_name, game_dir=self.saved_folder)
 
         else:
             return False

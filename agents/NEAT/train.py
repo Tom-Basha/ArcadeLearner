@@ -81,10 +81,17 @@ class Trainer:
         self.winner_score = None
         self.winner_fitness = None
 
+    # Inputs: Genome (AI player), NEAT config.
+    # Description: AI player game loop.
+    #              Runs a game, let the genome make moves, calculates fitness.
     def train_ai(self, genome, config):
+        # Loads current genome neural network.
         net = neat.nn.FeedForwardNetwork.create(genome, config)
+
+        # Run the game as a subprocess.
         subprocess.Popen(["python", self.game_path], shell=True)
 
+        # Waits for connection, and sends the game the required attributes.
         client_socket, addr = self.socket.accept()
         client_socket.sendall(pickle.dumps(self.inputs))
 
@@ -95,8 +102,11 @@ class Trainer:
         game_w = 1280
         game_h = 720
 
+        # Main AI player loop.
         while True:
             data = client_socket.recv(4096)
+
+            # Checks if data was sent from the game.
             if data:
                 data, input_arr = self.organize_data(data)
 
@@ -105,13 +115,18 @@ class Trainer:
                 if self.handle_training_events(mouse_pos, genome):
                     break
 
-                move = self.action(net, input_arr, genome)
+                # Sends data to the neural network, gets an action, sends the action to the game.
+                move = self.action(net, input_arr)
                 client_socket.sendall(pickle.dumps(move))
-                self.frame_penalty(game_w, game_h, genome)
 
+                # Check for movement
+                self.frame_penalty(game_w, game_h)
+
+                # Calculates current play time and fitness.
                 self.duration = round(time.time() - start_time, 3)
                 self.update_fitness(genome)
 
+                # Checks if genome got to the required threshold (Win), else continue playing.
                 if genome.fitness >= self.threshold:
                     if self.score > 10:
                         self.winner_score = self.score
@@ -122,8 +137,10 @@ class Trainer:
                         genome.fitness = 5
                     break
             else:
+                # The player lost.
                 break
 
+        # Penalties check.
         self.duration = round(time.time() - start_time, 3)
         if self.duration < 5 and self.score <= 10:
             self.penalty += 20
@@ -132,6 +149,7 @@ class Trainer:
         elif self.duration < 2:
             self.penalty += 30
 
+        # Calculates final fitness.
         self.update_fitness(genome)
 
         if self.duration > 300 and self.score < 5:
@@ -140,6 +158,7 @@ class Trainer:
         print(
             f"{genome.key}.\t\t Fitness: {round(genome.fitness, 3)}\t|\t Duration: {self.duration}\t|\t Score: {self.score}")
 
+        # Saves data to show in the control screen.
         self.last_gemone = {"key": genome.key, "fitness": round(genome.fitness, 3), "time": self.duration,
                             "score": self.score}
         self.last_gemone_obj = genome
@@ -150,11 +169,15 @@ class Trainer:
 
         return False
 
+    # Inputs: Genome.
+    # Description: Updates the genome fitness.
     def update_fitness(self, genome):
         genome.fitness = self.score + self.duration / 2 - self.penalty
 
-    def set_player_frame(self, s):
-        name, value = s[0], eval(s[1])
+    # Inputs: Player frame data.
+    # Description: Updates the player location.
+    def set_player_frame(self, info):
+        name, value = info[0], eval(info[1])
         if name == 'rect.x':
             self.player_frame[0] = value
             return
@@ -168,17 +191,26 @@ class Trainer:
             self.player_frame[3] = self.player_frame[1] + value
             return
 
-    def action(self, net, values, genome):
+    # Inputs: The player's neural network, data from the game.
+    # Outputs: The player's next move.
+    # Description: Gets data from the game, send it to the genome's neural network and gets an action to execute.
+    def action(self, net, values):
+        # send data to neural network and get the decision.
         output = net.activate(values)
         decision = output.index(max(output))
+
+        # 0 = Doing nothing.
         if decision == 0:
-            self.penalty += 0.001
+            self.penalty += 0.001       # Add penalty to discourage this kind of behavior.
             return 0
         else:
             decision -= 1
-            return self.outputs[decision]
+            return self.outputs[decision]       # Translates decision to action and returns the action.
 
-    def frame_penalty(self, w, h, genome):
+    # Inputs: Game width, game height.
+    # Description: Updates the penalty factor if the player touches the game window frame and if the player doesn't move.
+    def frame_penalty(self, w, h):
+        # Game window penalty.
         if self.player_frame[0] == 0:
             self.penalty += 0.01
         if self.player_frame[1] == 0:
@@ -188,6 +220,7 @@ class Trainer:
         if self.player_frame[3] == h:
             self.penalty += 0.01
 
+        # Movement penalty.
         moved = False
         for i in range(len(self.player_frame)):
             if self.player_frame[i] != self.prev_player_frame[i]:
@@ -198,13 +231,14 @@ class Trainer:
 
         self.prev_player_frame = self.player_frame.copy()
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def genomes_eval(self, genomes, config):
+        # Creates socket and listening to incoming connections.
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('localhost', 8888))
-        # Listen for incoming connections
         self.socket.listen()
-
-        print(f"Requested attributes: {self.inputs}")
 
         for genome_id, genome in genomes:
             genome.fitness = 0
@@ -238,10 +272,14 @@ class Trainer:
 
         self.socket.close()
 
+    # Inputs: Loaded config.
+    # Description: Setting up the reporters, final train setting
     def run_neat(self, config):
+        # Sets the destinations paths.
         game_files = f"..\\agents\\NEAT\\games\\{self.game_name}"
         cps_path = f"..\\agents\\NEAT\\games\\{self.game_name}\\checkpoints"
         cp_prefix = f"{cps_path}\\train_checkpoint_"
+
         finished = False
         if self.start_gen == -1:
             p = neat.Population(config)
@@ -291,12 +329,13 @@ class Trainer:
         if finished:
             self.finish_screen(formatted_time)
 
+    # Description: Loads the configuration file and runs NEAT's main function.
     def neat_setup(self):
+        # Updates start checkpoint.
         if self.start_gen == -1:
             self.update_config()
 
         if self.valid_input:
-            print(self.config_path)
             config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                  neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                  self.config_path)
@@ -309,6 +348,9 @@ class Trainer:
 
         return
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def add_essentials(self):
         essentials = ['rect.x', 'rect.y', 'rect.w', 'rect.h', 'score']
 
@@ -320,6 +362,9 @@ class Trainer:
             if attribute not in self.inputs[player_key]:
                 self.inputs[player_key].insert(index + 1, attribute)
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def test_inputs(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('localhost', 8888))
@@ -338,15 +383,18 @@ class Trainer:
 
         return len(input_arr)
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def organize_data(self, data):
         data = pickle.loads(data)
         input_arr = np.array([])
-        for s in data:
-            value = s[1]
-            if '<' in s[1]:
-                print(f"PROBLEM: {s[1]}, {type(s[1])}")
+        for info in data:
+            value = info[1]
+            if '<' in info[1]:
+                print(f"PROBLEM: {info[1]}, {type(info[1])}")
                 self.valid_input = False
-            elif '(' in s[1] or '[' in s[1]:
+            elif '(' in info[1] or '[' in info[1]:
                 arr = eval(value)
                 if isinstance(arr[0], list) or isinstance(arr[0], np.ndarray):
                     for sub_arr in arr:
@@ -355,19 +403,22 @@ class Trainer:
                 else:
                     arr = np.array(arr)
                     input_arr = np.concatenate((input_arr, arr.flatten()))
-            elif s[0] == 'score':
-                self.score = float(s[1])
-            elif s[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h']:
-                self.set_player_frame(s)
+            elif info[0] == 'score':
+                self.score = float(info[1])
+            elif info[0] in ['rect.x', 'rect.y', 'rect.w', 'rect.h']:
+                self.set_player_frame(info)
             else:
-                if type(eval(s[1])) in (int, float):
-                    input_arr = np.append(input_arr, float(s[1]))
+                if type(eval(info[1])) in (int, float):
+                    input_arr = np.append(input_arr, float(info[1]))
                 else:
-                    print(f"PROBLEM: {s[1]}, {type(s[1])}")
+                    print(f"PROBLEM: {info[1]}, {type(info[1])}")
                     self.valid_input = False
 
         return data, input_arr
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def update_config(self):
         attributes = ['fitness_threshold', 'pop_size', 'num_outputs', 'num_inputs', 'num_hidden']
         inputs_cnt = self.test_inputs()
@@ -395,6 +446,9 @@ class Trainer:
         with open(self.config_path, 'w') as file:
             file.writelines(updated_lines)
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def update_info(self, genome=None, key=None):
         self.info(genome, key)
 
@@ -439,6 +493,9 @@ class Trainer:
 
         return False
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def info(self, genome=None, key=None):
         if key is None:
             key = genome.key
@@ -479,6 +536,9 @@ class Trainer:
 
         self.update_buttons()
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def update_buttons(self):
         mouse_pos = pygame.mouse.get_pos()
 
@@ -488,6 +548,9 @@ class Trainer:
 
         pygame.display.update()
 
+    # Inputs:
+    # Outputs:
+    # Description:
     def save_data(self, cps_path):
         data = {
             "population": self.population,
@@ -557,6 +620,9 @@ class Trainer:
             pygame.display.update()
 
 
+# Inputs:
+# Outputs:
+# Description:
 def format_time(seconds):
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
