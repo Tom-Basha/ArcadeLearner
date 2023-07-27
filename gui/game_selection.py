@@ -23,14 +23,14 @@ def main_menu():
     buttons = games_buttons(games_list)
     QUIT_BUTTON = back_btn("QUIT")
     while True:
-        # Init screen
+        # Init screen.
         pygame.display.set_caption("ArcadeLearner")
         SCREEN.blit(BACKGROUND, (0, 0))
 
-        # Set mouse
+        # Set mouse.
         MENU_MOUSE_POS = pygame.mouse.get_pos()
 
-        # Labels
+        # Labels.
         MENU_TEXT, MENU_RECT = header("ArcadeLearner")
         SECOND_MENU, SECOND_MENU_RECT = subhead("Pick Your Game of Choice", pos=(640, 150))
 

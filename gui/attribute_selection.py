@@ -33,11 +33,11 @@ class AttributeList:
         self.headers_space = 70
         self.classes_space = 150
 
-        # Screen creation
+        # Screen creation.
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Attributes")
 
-        # Scrollbar creation
+        # Scrollbar creation.
         self.scrollbar = Scrollbar(self.screen, self.list_height, self.list_window, self.top_margin, self.bottom_margin)
 
     def add_headers(self, class_name, rects, x=190, y=200):
@@ -80,7 +80,7 @@ class AttributeList:
                     self.screen.blit(attribute_label, attribute_rect)
                     pygame.gfxdraw.box(self.screen, rect, text_color)
 
-                    # Draw the key's border
+                    # Draw the key's border.
                     border_rect = rect.inflate(-1, -1)
                     pygame.draw.rect(self.screen, text_color, border_rect, 3, border_radius=10)
 
@@ -115,7 +115,7 @@ def attribute_selection(game_classes, selected_attributes):
             att_list.scrollbar.handle_event(event)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Check if the mouse is over the button
+                # Check if the mouse is over the button.
                 if BACK_BTN.check_input(MENU_MOUSE_POS):
                     return selected_items
                 for i, text_rect in enumerate(text_rects):

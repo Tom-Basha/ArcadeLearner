@@ -24,13 +24,13 @@ class Settings:
     def __init__(self, game_name, selected_keys, selected_attributes, fitness, generations, population, start_cp, hidden_layers):
         pygame.init()
         self.cps_path = f"..\\agents\\NEAT\\games\\{game_name}\\checkpoints"
-        # Screen creation
+        # Screen creation.
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Training Settings")
 
         self.selected_keys = selected_keys
         self.selected_attributes = selected_attributes
-        # List settings
+        # List settings.
         self.top_margin = 200
         self.bottom_margin = 150
         self.list_window = SCREEN_H - self.top_margin - self.bottom_margin
@@ -38,7 +38,8 @@ class Settings:
         self.item_width = 600
         self.items_spacing = 20
         self.slider_x = SCREEN_W // 2 - 250
-        # Items
+
+        # Settings and sliders creation.
         self.items = [
             ("Start Checkpoint", "Set to -1 for a new training",
              Slider(self.slider_x, self.top_margin + 0 * (self.item_height + self.items_spacing), 500, -1,
@@ -60,7 +61,8 @@ class Settings:
         self.values = [start_cp, fitness, generations, population, hidden_layers]
 
         self.num_items = len(self.items)
-        # Sliders
+
+        # Sliders list.
         self.sliders = [
             self.items[0][2],
             self.items[1][2],
@@ -69,14 +71,15 @@ class Settings:
             self.items[4][2]
         ]
 
-        # Scrollbar creation
+        # Scrollbar creation.
         self.scrollbar = Scrollbar(self.screen,
                                    170 + self.num_items * (self.item_height + self.items_spacing) - self.items_spacing,
                                    self.list_window, self.top_margin, self.bottom_margin)
 
-        # Font
+        # Font.
         self.font = pygame.font.Font(None, 36)
 
+    # Description: Counts how many checkpoints are there.
     def cps_count(self):
         count = -1
         if os.path.exists(self.cps_path):
@@ -86,56 +89,56 @@ class Settings:
         return count
 
     def draw_item(self, item, sub_item, y, slider):
-        # Set the dimensions and position of the rectangle
+        # Set the dimensions and position of the rectangle.
         rect_width = 750
         rect_height = 150
-        x = SCREEN_W // 2 - rect_width // 2  # center the rectangle horizontally
+        x = SCREEN_W // 2 - rect_width // 2  # center the rectangle horizontally.
 
         item_surface = pygame.Surface((rect_width, rect_height), pygame.SRCALPHA)
 
         item_surface.fill((0, 0, 0, 0))
 
-        # Create a mask and a temporary surface for the rectangle with rounded corners
+        # Create a mask and a temporary surface for the rectangle with rounded corners.
         mask = pygame.Surface((rect_width, rect_height), pygame.SRCALPHA)
         mask.fill((0, 0, 0, 128))  # semi-transparent color
-        pygame.draw.rect(mask, (0, 0, 0, 128), mask.get_rect(), border_radius=15)  # punch a hole in the mask
+        pygame.draw.rect(mask, (0, 0, 0, 128), mask.get_rect(), border_radius=15)  # punch a hole in the mask.
 
-        # Create another temporary surface and draw the rectangle with rounded corners onto it
+        # Create another temporary surface and draw the rectangle with rounded corners onto it.
         temp = pygame.Surface((rect_width, rect_height), pygame.SRCALPHA)
         pygame.draw.rect(temp, (0, 0, 0, 128), temp.get_rect(), border_radius=15)
 
-        # Apply the mask onto the temporary surface
+        # Apply the mask onto the temporary surface.
         temp.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
-        # Draw the rectangle border with a border radius
+        # Draw the rectangle border with a border radius.
         pygame.draw.rect(temp, MAIN_CLR, temp.get_rect(), width=3, border_radius=15)
 
-        # Draw the temporary surface onto the item surface
+        # Draw the temporary surface onto the item surface.
         item_surface.blit(temp, (0, 0))
 
-        # Render the text
+        # Render the text.
         font = pygame.font.Font(None, 36)
         text = font.render(item, True, MAIN_CLR)
         surface_midtop = item_surface.get_rect().midtop
 
-        text_rect = text.get_rect(midtop=(surface_midtop[0], surface_midtop[1] + 20))  # center the text
+        text_rect = text.get_rect(midtop=(surface_midtop[0], surface_midtop[1] + 20))  # center the text.
 
-        # Draw the text onto the Surface
+        # Draw the text onto the Surface.
         item_surface.blit(text, text_rect)
 
-        # Render the subtext
+        # Render the subtext.
         sub_font = pygame.font.Font(None, 20)
         subtext = sub_font.render(sub_item, True, SECONDARY_CLR)
-        subtext_rect = subtext.get_rect(midtop=(surface_midtop[0], surface_midtop[1] + 45))  # center the text
+        subtext_rect = subtext.get_rect(midtop=(surface_midtop[0], surface_midtop[1] + 45))  # center the text.
 
-        # Draw the subtext onto the Surface
+        # Draw the subtext onto the Surface.
         item_surface.blit(subtext, subtext_rect)
 
-        # Draw the Surface onto the screen
+        # Draw the Surface onto the screen.
         self.screen.blit(item_surface, (x, y))
 
-        # Draw the slider
-        slider.y = 15 + y + self.item_height // 2  # update the slider's y-position
+        # Draw the slider.
+        slider.y = 15 + y + self.item_height // 2  # update the slider's y-position.
         slider.draw(self.screen)
 
 
@@ -157,7 +160,7 @@ def train_setting(game_name, game_attributes, selected_keys, selected_attributes
             if event.type == pygame.QUIT:
                 return
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Check if the mouse is over the button
+                # Check if the mouse is over the button.
                 if BACK_BTN.check_input(mouse_pos):
                     return selected_keys, selected_attributes, settings.values[0], settings.values[1], settings.values[2], settings.values[3], \
                         settings.values[4]
@@ -169,7 +172,7 @@ def train_setting(game_name, game_attributes, selected_keys, selected_attributes
 
             settings.scrollbar.handle_event(event)
 
-            # Handle events for the sliders
+            # Handle events for the sliders.
             for slider in settings.sliders:
                 slider.handle_event(event)
 

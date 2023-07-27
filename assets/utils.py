@@ -3,7 +3,7 @@ from assets import paths
 
 pygame.font.init()
 
-# Colors Presets
+# Colors Presets.
 MAIN_CLR = "#b68f40"
 ERROR_CLR = "#ff0000"
 ERROR2_CLR = "#aa0000"
@@ -12,17 +12,17 @@ WHITE = (255, 255, 255, 0)
 BLACK = (0, 0, 0, 0)
 GREEN = (0, 255, 0, 0)
 
-# Measurements
+# Measurements.
 SCREEN_W = 1280
 SCREEN_H = 720
 
 
-# Set up font
+# Set up font.
 def get_font(size, font=paths.MAIN_FONT):
     return pygame.font.Font(font, size)
 
 
-# Labels presets
+# Labels presets.
 def label_creation(text, size, color, pos, alignment="center"):
     label = get_font(size).render(text, True, color)
     rect = label.get_rect()

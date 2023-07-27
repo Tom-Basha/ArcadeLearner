@@ -9,7 +9,7 @@ from assets.paths import *
 
 class KeySelection:
     def __init__(self, keys):
-        # Define some constants for the colors and sizes of the keys
+        # Define some constants for the colors and sizes of the keys.
         self.KEY_WIDTH = 50
         self.KEY_HEIGHT = 50
         self.KEY_MARGIN = 1
@@ -17,11 +17,11 @@ class KeySelection:
         self.curr_x = 183
         self.curr_y = 200
 
-        # Create a Pygame window
+        # Create a Pygame window.
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         pygame.display.set_caption("Controls")
 
-        # Create a dictionary of key labels and their rectangles
+        # Create a dictionary of key labels and their rectangles.
         self.key_rects = {}
         self.row_1 = "1234567890"
         self.row_2 = "QWERTYUIOP"
@@ -44,7 +44,7 @@ class KeySelection:
             self.curr_y += self.KEY_HEIGHT + self.KEY_MARGIN
             self.curr_x = 183
 
-        # esc row
+        # esc row.
         draw_key('pygame.K_ESCAPE', 'ESC', 0)
         self.curr_x += 45
         draw_key('pygame.K_F1', 'F1', 0)
@@ -64,7 +64,7 @@ class KeySelection:
         self.curr_y += 30
         next_row()
 
-        # numbers row
+        # numbers row.
         draw_key('pygame.K_BACKQUOTE', '`', 0)
         draw_row(self.row_1)
         draw_key('pygame.K_MINUS', '-', 0)
@@ -76,7 +76,7 @@ class KeySelection:
         draw_key('pygame.K_PAGEUP', 'Pg\u2191', 0)
         next_row()
 
-        # tab row
+        # tab row.
         draw_key('pygame.K_TAB', 'TAB', 20)
         draw_row(self.row_2)
         draw_key('pygame.K_LEFTBRACKET', '[', 0)
@@ -88,7 +88,7 @@ class KeySelection:
         draw_key('pygame.K_PAGEDOWN', 'Pg\u2193', 0)
         next_row()
 
-        # caps row
+        # caps row.
         draw_key('pygame.K_CAPSLOCK', 'CAPS', 30)
         draw_row(self.row_3)
         draw_key('pygame.K_SEMICOLON', ';', 0)
@@ -96,7 +96,7 @@ class KeySelection:
         draw_key('pygame.K_RETURN', 'ENTER', 65)
         next_row()
 
-        # shift row
+        # shift row.
         draw_key('pygame.K_LSHIFT', 'SHIFT', 50)
         draw_row(self.row_4)
         draw_key('pygame.K_COMMA', ',', 0)
@@ -107,7 +107,7 @@ class KeySelection:
         draw_key('pygame.K_UP', '\u2191', 0)
         next_row()
 
-        # ctrl row
+        # ctrl row.
         draw_key('pygame.K_LCTRL', 'CTRL', 20)
         draw_key('pygame.K_LMETA', 'WIN', 0)
         draw_key('pygame.K_LALT', 'ALT', 10)
@@ -126,23 +126,23 @@ class KeySelection:
         pygame.draw.rect(SCREEN, WHITE, keyboard_boarder, 2, border_radius=15)
         # Draw the keys
         for key, (rect, disp_name) in self.key_rects.items():
-            # Draw the key's top surface
+            # Draw the key's top surface.
             key_color = GREEN if key in clicked_keys else WHITE
             pygame.gfxdraw.box(SCREEN, rect, key_color)
 
-            # Draw the key's border
+            # Draw the key's border.
             border_rect = rect.inflate(-1, -1)
             pygame.draw.rect(SCREEN, key_color, border_rect, 3, border_radius=10)
 
-            # Draw the key label
+            # Draw the key label.
             key_label, key_rect = keyboard_key(disp_name, key_color, rect)
             SCREEN.blit(key_label, key_rect)
 
     def handle_click(self, pos):
-        # Check if the click is inside a key's rectangle
+        # Check if the click is inside a key's rectangle.
         for key, (rect, disp_name) in self.key_rects.items():
             if rect.collidepoint(pos):
-                # Toggle the key's color and add/remove it from clicked_keys
+                # Toggle the key's color and add/remove it from clicked_keys.
                 if key in clicked_keys:
                     clicked_keys.remove(key)
                 else:
@@ -177,7 +177,7 @@ def key_selection(keys):
 
     BACK_BTN = back_btn()
 
-    # Start the main game loop
+    # Start the main game loop.
     while True:
         SCREEN.blit(BG, (0, 0))
 
@@ -186,7 +186,7 @@ def key_selection(keys):
         BACK_BTN.change_color(MENU_MOUSE_POS)
         BACK_BTN.update(SCREEN)
 
-        # Handle events
+        # Handle events.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return clicked_keys
@@ -197,7 +197,7 @@ def key_selection(keys):
                     print(clicked_keys)
                     return clicked_keys
 
-        # Draw the keyboard and update the display
+        # Draw the keyboard and update the display.
 
         SCREEN.blit(HEADER, HEADER_RECT)
         SCREEN.blit(SUBHEAD, SUBHEAD_RECT)

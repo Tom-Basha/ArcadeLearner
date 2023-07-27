@@ -57,9 +57,11 @@ def selected_game(game, path):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Play.
                 if PLAY_BTN.check_input(MENU_MOUSE_POS):
                     subprocess.run(["python", game_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 
+                # Watch AI.
                 if WATCH_BTN.check_input(MENU_MOUSE_POS):
                     ai_player = AI_Player(game, path)
                     trained = ai_player.neat_setup()
@@ -68,6 +70,7 @@ def selected_game(game, path):
                     else:
                         ai_player.play()
 
+                # Train AI.
                 if TRAIN_BTN.check_input(MENU_MOUSE_POS):
                     if start_gen != -1:
                         data_path = f"..\\agents\\NEAT\\games\\{game}\\data.json"
@@ -87,6 +90,7 @@ def selected_game(game, path):
                                       population, start_gen, hidden_layers)
                     trainer.neat_setup()
 
+                # Settings.
                 if SETTINGS.check_input(MENU_MOUSE_POS):
                     selected_keys, selected_attributes, start_gen, threshold, generations, population, hidden_layers = train_setting(
                         game, game_attributes, selected_keys, selected_attributes, threshold, generations, population, start_gen,

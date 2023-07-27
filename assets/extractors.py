@@ -53,15 +53,15 @@ def attribute_extractor(file_path):
 
         # Iterates through the AST nodes and extracts class attributes.
         for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef):          # Class
+            if isinstance(node, ast.ClassDef):          # Class.
                 class_name = node.name
                 class_features[class_name] = []
                 for subnode in node.body:
-                    if isinstance(subnode, ast.FunctionDef):        # Function
+                    if isinstance(subnode, ast.FunctionDef):        # Function.
                         for subsubnode in subnode.body:
-                            if isinstance(subsubnode, ast.Assign):      # Assignment statement
+                            if isinstance(subsubnode, ast.Assign):      # Assignment statement.
                                 for target in subsubnode.targets:
-                                    if isinstance(target, ast.Attribute):   # Attribute
+                                    if isinstance(target, ast.Attribute):   # Attribute.
                                         value = target.value
                                         while isinstance(value, ast.Attribute):
                                             value = value.value
@@ -80,7 +80,7 @@ def attribute_extractor(file_path):
     return [(class_name, attrs) for class_name, attrs in class_features.items()]
 
 
-# Inputs: List of tuples, each containing a class name and its associated attributes
+# Inputs: List of tuples, each containing a class name and its associated attributes.
 # Output: A dictionary where keys are object types and values are lists of attributes.
 # Description: Auto selects attributes by matching attributes from predefined json file and the tuple list attributes.
 def match_attributes(game_attributes):
