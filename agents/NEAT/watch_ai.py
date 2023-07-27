@@ -37,10 +37,13 @@ class AI_Player:
 
         self.socket = None
 
+    # Description: Loads the configuration file and checks if trained AI exists.
     def neat_setup(self):
         playable = False
         player = None
-        if os.path.exists(self.player) or os.path.exists(self.player_unfinished):
+
+        # Checks if a trained AI exists.
+        if os.path.exists(self.player):
             playable = True
             if os.path.exists(self.player):
                 player = self.player
@@ -59,23 +62,31 @@ class AI_Player:
             return False
         return True
 
-    def play(self, evaluation=False):
+    # Description: AI Player plays the game.
+    def play(self):
+        # Creates socket and listening to incoming connections.
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('localhost', 8888))
         self.socket.listen()
-
         print(f"Requested attributes: {self.inputs}")
+
+        # Opens the game as a subprocess.
         subprocess.Popen(["python", self.game_path], shell=True)
+
+        # Socket waits for connection and sends the required attributes.
         client_socket, addr = self.socket.accept()
         client_socket.sendall(pickle.dumps(self.inputs))
 
         while True:
             data = client_socket.recv(4096)
             if data:
+                # Flattens the data.
                 data = pickle.loads(data)
                 input_arr = np.array([])
                 for s in data:
                     value = s[1]
+
+                    # Checks for inner arrays/lists to flatten.
                     if '(' in s[1] or '[' in s[1]:
                         arr = eval(value)
                         if isinstance(arr[0], list) or isinstance(arr[0], np.ndarray):
@@ -97,17 +108,26 @@ class AI_Player:
                         pygame.quit()
                         return True
 
+                # Decides what is the next move by the neural network decision and send it to the game.
                 move = self.action(self.winner_net, input_arr)
                 client_socket.sendall(pickle.dumps(move))
 
             else:
                 break
 
+        # Closes the socket.
         self.socket.close()
 
+    # Inputs: Genome neural network, data from the game.
+    # Outputs: The player's next move.
+    # Description: Gets data from the game, send it to the genome's neural network and gets an action to execute.
+
     def action(self, net, values):
+        # Send data to neural network and get the decision.
         output = net.activate(values)
         decision = output.index(max(output))
+
+        # 0 = Doing nothing.
         if decision == 0:
             return 0
         else:
