@@ -22,7 +22,7 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
-fps = 150
+fps = 80
 
 
 class Bird(pygame.sprite.Sprite):
@@ -96,7 +96,7 @@ def main():
         s.connect(('localhost', 8888))
         instructions = pickle.loads(s.recv(4096))
         connected = True
-        fps = 150
+        fps = 0
     except ConnectionRefusedError:
         pass
 
@@ -170,8 +170,6 @@ def main():
             pygame.time.delay(300)
             break
 
-
-        # print("Gap bottom: ", active_objects[1].gap_bottom, "\tGap top: ", active_objects[1].gap_top, "\tX pos: ", active_objects[1].x_pos, "\tBird x: ", active_objects[0].x)
         if connected:
             data = []
             for class_name, attributes in instructions.items():

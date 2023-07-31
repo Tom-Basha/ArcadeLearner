@@ -164,9 +164,12 @@ def train_setting(game_name, game_attributes, selected_keys, selected_attributes
                 if BACK_BTN.check_input(mouse_pos):
                     return selected_keys, selected_attributes, settings.values[0], settings.values[1], settings.values[2], settings.values[3], \
                         settings.values[4]
+
+                # Keys selection.
                 if CONTROLS_BTN.check_input(mouse_pos):
                     settings.selected_keys = ks.key_selection(selected_keys)
 
+                # Attributes selection.
                 if ATTRIBUTES_BTN.check_input(mouse_pos):
                     settings.selected_attributes = attribute_selection(game_attributes, selected_attributes)
 

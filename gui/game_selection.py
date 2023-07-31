@@ -1,7 +1,4 @@
 import os
-import ctypes
-
-import pygame
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 

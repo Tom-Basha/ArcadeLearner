@@ -121,7 +121,6 @@ class AI_Player:
     # Inputs: Genome neural network, data from the game.
     # Outputs: The player's next move.
     # Description: Gets data from the game, send it to the genome's neural network and gets an action to execute.
-
     def action(self, net, values):
         # Send data to neural network and get the decision.
         output = net.activate(values)

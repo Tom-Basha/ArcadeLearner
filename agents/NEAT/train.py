@@ -197,7 +197,7 @@ class Trainer:
     # Description: Gets data from the game, send it to the genome's neural network and gets an action to execute.
     def action(self, net, values):
         # Send data to neural network and get the decision.
-        output = net.activate(values)
+        output = net.activate(values)    # [0.30 0.57 0.13]
         decision = output.index(max(output))
 
         # 0 = Doing nothing.
